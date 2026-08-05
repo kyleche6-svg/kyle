@@ -26,7 +26,7 @@ export default async function PoliticiansPage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-12">
+    <div className="mx-auto max-w-6xl px-6 py-8">
       <h1 className="text-2xl font-semibold">Politician Trading Tracker</h1>
       <p className="mt-1 text-sm text-muted">
         Public congressional stock trade disclosures. Mock data — real
@@ -98,7 +98,7 @@ export default async function PoliticiansPage() {
         </div>
       </Panel>
 
-      <div className="mt-8">
+      <div className="mt-6">
         <Disclaimer />
       </div>
     </div>

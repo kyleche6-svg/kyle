@@ -43,7 +43,7 @@ const pillars = [
 export default function Home() {
   return (
     <div>
-      <div className="mx-auto max-w-6xl px-6 pt-20 pb-4">
+      <div className="mx-auto max-w-6xl px-6 pt-14 pb-4">
         <div className="max-w-2xl">
           <h1 className="text-4xl font-semibold tracking-tight">
             Everything you check before the market opens. One dashboard.
@@ -70,8 +70,8 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-6 py-16">
-        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[1fr_auto_1fr]">
+      <div className="mx-auto max-w-6xl px-6 py-10">
+        <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-[1fr_auto_1fr]">
           <div>
             <p className="mb-4 text-xs font-medium tracking-wide text-muted uppercase">
               Right now
@@ -104,16 +104,19 @@ export default function Home() {
               <div className="grid grid-cols-2 gap-4">
                 <StatNumber label="USD vs EUR" value="1.082" delta="+0.41%" accent />
                 <StatNumber label="NVDA · Strong Buy" value="$138.66" delta="+0.47%" />
+                <StatNumber label="Gold" value="$2,381.20" delta="+0.34%" />
+                <StatNumber label="Congress buys (30d)" value="142" delta="+18" />
               </div>
-              <div className="mt-4 border-t border-panel-border pt-4 text-xs text-muted">
-                Fed Interest Rate Decision — today, 9:30 AM
+              <div className="mt-4 flex flex-col gap-1.5 border-t border-panel-border pt-4 text-xs text-muted">
+                <p>Fed Interest Rate Decision — today, 9:30 AM</p>
+                <p>Non-Farm Payrolls — today, 5:00 AM</p>
               </div>
             </Panel>
           </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-6 py-16">
+      <div className="mx-auto max-w-6xl px-6 py-10">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {pillars.map((pillar) => {
             const Icon = pillar.icon;

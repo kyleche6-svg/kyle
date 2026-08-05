@@ -36,7 +36,7 @@ export default async function TweetsPage() {
   });
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-12">
+    <div className="mx-auto max-w-4xl px-6 py-8">
       <h1 className="text-2xl font-semibold">Market-Moving Tweet Tracker</h1>
       <p className="mt-1 text-sm text-muted">
         Tracked posts with tagged tickers and historical price reaction
@@ -45,7 +45,7 @@ export default async function TweetsPage() {
         buy/sell signals.
       </p>
 
-      <div className="mt-6 flex flex-col gap-4">
+      <div className="mt-4 flex flex-col gap-3">
         {byTicker.map(({ post, grouped }) => (
           <Panel key={post.id}>
             <div className="flex items-start justify-between gap-4">
@@ -104,7 +104,7 @@ export default async function TweetsPage() {
         ))}
       </div>
 
-      <div className="mt-8">
+      <div className="mt-6">
         <Disclaimer />
       </div>
     </div>

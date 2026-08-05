@@ -22,10 +22,10 @@ export default async function AccountPage() {
   const isActive = subscription?.status === "active";
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-16">
+    <div className="mx-auto max-w-2xl px-6 py-8">
       <h1 className="text-2xl font-semibold">Account</h1>
 
-      <Panel title="Profile" className="mt-8">
+      <Panel title="Profile" className="mt-6">
         <p className="text-sm">{session.user.email}</p>
         <ProfileForm name={user?.name ?? null} phone={user?.phone ?? null} />
       </Panel>
@@ -63,7 +63,7 @@ export default async function AccountPage() {
         </div>
       </Panel>
 
-      <div className="mt-8 flex items-center gap-6">
+      <div className="mt-6 flex items-center gap-6">
         <form action={logout}>
           <button
             type="submit"

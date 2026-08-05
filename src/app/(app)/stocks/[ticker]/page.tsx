@@ -134,7 +134,7 @@ export default async function StockDetailPage({
       </Panel>
 
       <Panel title="Key statistics" className="mt-4">
-        <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4 lg:grid-cols-[repeat(6,minmax(0,1fr))]">
           {statTiles.map((tile) => (
             <div key={tile.label}>
               <p className="text-xs text-muted">{tile.label}</p>
@@ -231,7 +231,7 @@ export default async function StockDetailPage({
         </div>
       </Panel>
 
-      <div className="mt-8">
+      <div className="mt-6">
         <Disclaimer />
       </div>
     </div>

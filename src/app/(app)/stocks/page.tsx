@@ -54,7 +54,7 @@ export default async function StocksPage({
     : await getStockList();
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-12">
+    <div className="mx-auto max-w-6xl px-6 py-8">
       <h1 className="text-2xl font-semibold">Stocks</h1>
       <p className="mt-1 text-sm text-muted">
         Search any ticker. Live prices with real third-party analyst consensus
@@ -154,7 +154,7 @@ export default async function StocksPage({
         )}
       </Panel>
 
-      <div className="mt-8">
+      <div className="mt-6">
         <Disclaimer />
       </div>
     </div>

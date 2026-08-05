@@ -1,5 +1,15 @@
+import { headers } from "next/headers";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+
+// Server Actions are invoked as direct in-process calls, not HTTP requests
+// through proxy.ts — get the caller's IP the same way from within an action.
+export async function getRequestIp(): Promise<string> {
+  const headerList = await headers();
+  const forwardedFor = headerList.get("x-forwarded-for");
+  if (forwardedFor) return forwardedFor.split(",")[0].trim();
+  return headerList.get("x-real-ip") ?? "unknown";
+}
 
 const hasUpstash =
   !!process.env.UPSTASH_REDIS_REST_URL && !!process.env.UPSTASH_REDIS_REST_TOKEN;

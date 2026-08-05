@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
+import { checkGeneralLimit } from "@/lib/rate-limit";
 
 async function getOrigin() {
   const headerList = await headers();
@@ -13,11 +14,23 @@ async function getOrigin() {
   return `${protocol}://${host}`;
 }
 
+async function enforceGeneralLimit(userId: string, action: string) {
+  const { success } = await checkGeneralLimit(userId);
+  if (!success) {
+    console.warn(
+      JSON.stringify({ event: "rate_limit_violation", type: action, userId }),
+    );
+    throw new Error("Too many requests. Slow down and try again shortly.");
+  }
+}
+
 export async function createCheckoutSession() {
   const session = await auth();
   if (!session?.user?.id || !session.user.email) {
     redirect("/login");
   }
+
+  await enforceGeneralLimit(session.user.id, "checkout");
 
   const priceId = process.env.STRIPE_PRICE_ID;
   if (!priceId) {
@@ -67,6 +80,8 @@ export async function createPortalSession() {
   if (!session?.user?.id) {
     redirect("/login");
   }
+
+  await enforceGeneralLimit(session.user.id, "portal");
 
   const subscription = await prisma.subscription.findUnique({
     where: { userId: session.user.id },

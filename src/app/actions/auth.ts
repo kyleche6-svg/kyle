@@ -6,8 +6,20 @@ import { AuthError } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { signIn, signOut } from "@/lib/auth";
 import { SignupFormSchema, type SignupFormState } from "@/lib/definitions";
+import { checkGeneralLimit, checkLoginLimit, getRequestIp } from "@/lib/rate-limit";
+
+function logRateLimitViolation(details: Record<string, string>) {
+  console.warn(JSON.stringify({ event: "rate_limit_violation", ...details }));
+}
 
 export async function signup(_state: SignupFormState, formData: FormData) {
+  const ip = await getRequestIp();
+  const { success } = await checkGeneralLimit(`signup:${ip}`);
+  if (!success) {
+    logRateLimitViolation({ type: "signup", ip });
+    return { message: "Too many attempts. Try again in 15 minutes." };
+  }
+
   const validatedFields = SignupFormSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
@@ -39,6 +51,15 @@ export async function signup(_state: SignupFormState, formData: FormData) {
 export type LoginFormState = { message?: string } | undefined;
 
 export async function login(_state: LoginFormState, formData: FormData) {
+  const ip = await getRequestIp();
+  const email = String(formData.get("email") ?? "unknown");
+
+  const { success } = await checkLoginLimit(`${ip}:${email}`);
+  if (!success) {
+    logRateLimitViolation({ type: "login", ip, email });
+    return { message: "Too many login attempts. Try again in 15 minutes." };
+  }
+
   try {
     await signIn("credentials", {
       email: formData.get("email"),

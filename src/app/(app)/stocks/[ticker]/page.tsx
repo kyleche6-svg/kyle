@@ -1,9 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, TrendUp, TrendDown, Minus, Buildings, Users } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, ArrowSquareOut, TrendUp, TrendDown, Minus, Buildings, Users } from "@phosphor-icons/react/dist/ssr";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
 import { getQuote, getSeries } from "@/lib/market-data";
-import { getAnalystConsensus, getCompanyProfile, getEarnings, TRENDING_TICKERS } from "@/lib/stocks";
+import {
+  getAnalystConsensus,
+  getCompanyProfile,
+  getEarnings,
+  getKeyStatistics,
+  getStockNews,
+  TRENDING_TICKERS,
+} from "@/lib/stocks";
 import { searchStocks } from "@/lib/stock-search";
 import { Panel } from "@/components/Panel";
 import { StatNumber } from "@/components/StatNumber";
@@ -29,6 +36,25 @@ function formatDelta(changePercent: number) {
   return `${sign}${changePercent.toFixed(2)}%`;
 }
 
+function formatCompact(value: number) {
+  if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
+  if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+  if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+  return `$${value.toFixed(0)}`;
+}
+
+function formatRatio(value: number | null) {
+  return value === null ? "—" : value.toFixed(2);
+}
+
+function formatPercent(value: number | null) {
+  return value === null ? "—" : `${(value * 100).toFixed(1)}%`;
+}
+
+function formatNewsDate(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 export default async function StockDetailPage({
   params,
 }: {
@@ -46,19 +72,36 @@ export default async function StockDetailPage({
   const companyName = trending?.companyName ?? match?.companyName ?? ticker;
   const basePrice = trending?.basePrice ?? 100;
 
-  const [quote, series, consensus, profile, earnings] = await Promise.all([
+  const [quote, series, consensus, profile, earnings, stats, news] = await Promise.all([
     getQuote(ticker, companyName, basePrice),
     getSeries(ticker, basePrice, 20),
     getAnalystConsensus(ticker, basePrice),
     getCompanyProfile(ticker, companyName),
     getEarnings(ticker),
+    getKeyStatistics(ticker, basePrice),
+    getStockNews(ticker, companyName),
   ]);
 
   const isPositive = quote.changePercent >= 0;
   const targetUpside = ((consensus.avgPriceTarget - quote.price) / quote.price) * 100;
 
+  const statTiles = [
+    { label: "Market Cap", value: formatCompact(stats.marketCap) },
+    { label: "P/E (TTM)", value: formatRatio(stats.trailingPE) },
+    { label: "Forward P/E", value: formatRatio(stats.forwardPE) },
+    { label: "PEG Ratio", value: formatRatio(stats.pegRatio) },
+    { label: "P/S Ratio", value: formatRatio(stats.priceToSales) },
+    { label: "P/B Ratio", value: formatRatio(stats.priceToBook) },
+    { label: "Profit Margin", value: formatPercent(stats.profitMargin) },
+    { label: "Operating Margin", value: formatPercent(stats.operatingMargin) },
+    { label: "ROE", value: formatPercent(stats.returnOnEquity) },
+    { label: "Revenue (TTM)", value: stats.revenueTTM ? formatCompact(stats.revenueTTM) : "—" },
+    { label: "Revenue Growth", value: formatPercent(stats.revenueGrowth) },
+    { label: "52W Range", value: `$${stats.fiftyTwoWeekLow.toFixed(0)}–$${stats.fiftyTwoWeekHigh.toFixed(0)}` },
+  ];
+
   return (
-    <div className="mx-auto max-w-6xl px-6 py-12">
+    <div className="mx-auto max-w-6xl px-6 py-8">
       <Link
         href="/stocks"
         className="flex w-fit items-center gap-1.5 text-sm text-muted transition-colors hover:text-foreground"
@@ -66,7 +109,7 @@ export default async function StockDetailPage({
         <ArrowLeft size={14} /> Back to stocks
       </Link>
 
-      <div className="mt-4 flex items-baseline justify-between">
+      <div className="mt-3 flex items-baseline justify-between">
         <div>
           <h1 className="font-mono text-2xl font-semibold">{ticker}</h1>
           <p className="text-sm text-muted">{companyName}</p>
@@ -86,8 +129,19 @@ export default async function StockDetailPage({
         </div>
       </div>
 
-      <Panel className="mt-6">
+      <Panel className="mt-4">
         <StockPriceBarChart data={series} />
+      </Panel>
+
+      <Panel title="Key statistics" className="mt-4">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4 lg:grid-cols-6">
+          {statTiles.map((tile) => (
+            <div key={tile.label}>
+              <p className="text-xs text-muted">{tile.label}</p>
+              <p className="mt-0.5 font-mono text-sm font-medium tabular-nums">{tile.value}</p>
+            </div>
+          ))}
+        </div>
       </Panel>
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -151,6 +205,31 @@ export default async function StockDetailPage({
           </div>
         </Panel>
       </div>
+
+      <Panel title="News" className="mt-4">
+        <div className="flex flex-col divide-y divide-panel-border">
+          {news.map((article, i) => (
+            <a
+              key={i}
+              href={article.url}
+              target={article.url === "#" ? undefined : "_blank"}
+              rel="noopener noreferrer"
+              className="group flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0"
+            >
+              <div>
+                <p className="text-sm font-medium group-hover:text-accent">
+                  {article.headline}
+                </p>
+                <p className="mt-1 text-xs text-muted">
+                  {article.source} · {formatNewsDate(article.publishedAt)}
+                </p>
+                <p className="mt-1 text-xs text-muted">{article.summary}</p>
+              </div>
+              <ArrowSquareOut size={14} className="mt-0.5 shrink-0 text-muted" />
+            </a>
+          ))}
+        </div>
+      </Panel>
 
       <div className="mt-8">
         <Disclaimer />

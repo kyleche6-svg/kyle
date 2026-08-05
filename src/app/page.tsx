@@ -14,7 +14,7 @@ import { StatNumber } from "@/components/StatNumber";
 
 const scatteredTabs = [
   { icon: XLogo, label: "X / Twitter", rotate: "-rotate-3" },
-  { icon: Calendar, label: "ForexFactory", rotate: "rotate-2" },
+  { icon: Calendar, label: "Important News", rotate: "rotate-2" },
   { icon: ChartLine, label: "Broker app", rotate: "-rotate-1" },
   { icon: Table, label: "A spreadsheet", rotate: "rotate-3" },
 ];

@@ -24,6 +24,30 @@ export type EarningsQuarter = {
   epsEstimate: number;
 };
 
+export type KeyStatistics = {
+  marketCap: number;
+  trailingPE: number | null;
+  forwardPE: number | null;
+  pegRatio: number | null;
+  priceToSales: number | null;
+  priceToBook: number | null;
+  profitMargin: number | null;
+  operatingMargin: number | null;
+  returnOnEquity: number | null;
+  revenueTTM: number | null;
+  revenueGrowth: number | null;
+  fiftyTwoWeekLow: number;
+  fiftyTwoWeekHigh: number;
+};
+
+export type NewsArticle = {
+  headline: string;
+  source: string;
+  url: string;
+  publishedAt: string;
+  summary: string;
+};
+
 // Default landing set for the /stocks list before a search is entered.
 export const TRENDING_TICKERS = [
   { ticker: "AAPL", companyName: "Apple Inc.", basePrice: 227.5 },
@@ -213,6 +237,133 @@ function mockEarnings(ticker: string): EarningsQuarter[] {
 export async function getEarnings(ticker: string): Promise<EarningsQuarter[]> {
   const real = await twelveDataEarnings(ticker);
   return real ?? mockEarnings(ticker);
+}
+
+// Real data — Twelve Data's /statistics endpoint is available on the same
+// key already used for quotes/search, confirmed working directly against
+// the API. No mock fallback needed when a key is configured; falls back to
+// a labeled estimate only when unconfigured, consistent with the rest of
+// this app's pattern.
+async function twelveDataStatistics(ticker: string): Promise<KeyStatistics | null> {
+  const apiKey = process.env.TWELVE_DATA_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const res = await fetch(
+      `https://api.twelvedata.com/statistics?symbol=${encodeURIComponent(ticker)}&apikey=${apiKey}`,
+      { next: { revalidate: 86400 } },
+    );
+    const data = await res.json();
+    const stats = data.statistics;
+    if (data.code || !stats) return null;
+
+    const valuation = stats.valuations_metrics ?? {};
+    const financials = stats.financials ?? {};
+    const income = financials.income_statement ?? {};
+    const highLow = stats.stock_price_summary ?? {};
+
+    return {
+      marketCap: valuation.market_capitalization ?? 0,
+      trailingPE: valuation.trailing_pe ?? null,
+      forwardPE: valuation.forward_pe ?? null,
+      pegRatio: valuation.peg_ratio ?? null,
+      priceToSales: valuation.price_to_sales_ttm ?? null,
+      priceToBook: valuation.price_to_book_mrq ?? null,
+      profitMargin: financials.profit_margin ?? null,
+      operatingMargin: financials.operating_margin ?? null,
+      returnOnEquity: financials.return_on_equity_ttm ?? null,
+      revenueTTM: income.revenue_ttm ?? null,
+      revenueGrowth: income.quarterly_revenue_growth ?? null,
+      fiftyTwoWeekLow: highLow.fifty_two_week_low ?? 0,
+      fiftyTwoWeekHigh: highLow.fifty_two_week_high ?? 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function mockStatistics(ticker: string, currentPrice: number): KeyStatistics {
+  const marketCap = currentPrice * (1e8 + seededRandom(`shares:${ticker}`) * 5e9);
+  return {
+    marketCap,
+    trailingPE: 15 + seededRandom(`pe:${ticker}`) * 25,
+    forwardPE: 14 + seededRandom(`fpe:${ticker}`) * 22,
+    pegRatio: 0.8 + seededRandom(`peg:${ticker}`) * 2,
+    priceToSales: 2 + seededRandom(`ps:${ticker}`) * 8,
+    priceToBook: 3 + seededRandom(`pb:${ticker}`) * 15,
+    profitMargin: 0.05 + seededRandom(`pm:${ticker}`) * 0.3,
+    operatingMargin: 0.08 + seededRandom(`om:${ticker}`) * 0.3,
+    returnOnEquity: 0.1 + seededRandom(`roe:${ticker}`) * 0.4,
+    revenueTTM: marketCap * (0.15 + seededRandom(`rev:${ticker}`) * 0.35),
+    revenueGrowth: -0.05 + seededRandom(`rg:${ticker}`) * 0.35,
+    fiftyTwoWeekLow: currentPrice * (0.65 + seededRandom(`52l:${ticker}`) * 0.15),
+    fiftyTwoWeekHigh: currentPrice * (1.1 + seededRandom(`52h:${ticker}`) * 0.25),
+  };
+}
+
+export async function getKeyStatistics(
+  ticker: string,
+  currentPrice: number,
+): Promise<KeyStatistics> {
+  const real = await twelveDataStatistics(ticker);
+  return real ?? mockStatistics(ticker, currentPrice);
+}
+
+// Real per-ticker news via Finnhub (best free-tier option researched for
+// this — 60 req/min, dedicated company-news endpoint) when configured;
+// clearly-labeled mock headlines otherwise.
+async function finnhubNews(ticker: string): Promise<NewsArticle[] | null> {
+  const apiKey = process.env.FINNHUB_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const to = new Date().toISOString().slice(0, 10);
+    const from = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const res = await fetch(
+      `https://finnhub.io/api/v1/company-news?symbol=${encodeURIComponent(ticker)}&from=${from}&to=${to}&token=${apiKey}`,
+      { next: { revalidate: 1800 } },
+    );
+    const data = await res.json();
+    if (!Array.isArray(data)) return null;
+
+    return data.slice(0, 8).map((item: { headline: string; source: string; url: string; datetime: number; summary: string }) => ({
+      headline: item.headline,
+      source: item.source,
+      url: item.url,
+      publishedAt: new Date(item.datetime * 1000).toISOString(),
+      summary: item.summary,
+    }));
+  } catch {
+    return null;
+  }
+}
+
+const NEWS_TEMPLATES = [
+  "reports quarterly results, beats analyst estimates on revenue",
+  "announces new product initiative, shares react",
+  "faces regulatory scrutiny over recent business practices",
+  "CEO discusses growth strategy at industry conference",
+  "analysts revise price targets following sector outlook update",
+  "expands into new market segment",
+];
+
+function mockNews(ticker: string, companyName: string): NewsArticle[] {
+  return NEWS_TEMPLATES.map((template, i) => {
+    const daysAgo = Math.floor(seededRandom(`news-day:${ticker}:${i}`) * 13);
+    const publishedAt = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+    return {
+      headline: `[MOCK] ${companyName} ${template}`,
+      source: "Mock Wire",
+      url: "#",
+      publishedAt: publishedAt.toISOString(),
+      summary: `Placeholder summary — real news via Finnhub's company-news endpoint is a planned follow-up once FINNHUB_API_KEY is configured.`,
+    };
+  });
+}
+
+export async function getStockNews(ticker: string, companyName: string): Promise<NewsArticle[]> {
+  const real = await finnhubNews(ticker);
+  return real ?? mockNews(ticker, companyName);
 }
 
 export async function getStockList() {

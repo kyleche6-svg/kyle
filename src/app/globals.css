@@ -1,15 +1,17 @@
 @import "tailwindcss";
 
-/* Palette sourced from ui-ux-pro-max's "Financial Dashboard" color entry
-   and "Modern Dark" style entry (indigo accent flagged as best-for
-   fintech/trading dashboards specifically). */
+/* Redesigned palette: warm near-black + bull-market gold accent, replacing
+   the earlier cool indigo/slate system per explicit product-owner request.
+   Semantic green/red (gain/loss) stay unchanged — gold is reserved for
+   brand/interactive elements only, never decoration, so it never collides
+   with the gain/loss vocabulary. */
 :root {
-  --background: #020617;
-  --panel: #0e1223;
-  --panel-border: #334155;
-  --foreground: #f8fafc;
-  --muted: #94a3b8;
-  --accent: #5e6ad2;
+  --background: #0a0908;
+  --panel: #16130f;
+  --panel-border: #3a332a;
+  --foreground: #f5f3ef;
+  --muted: #a89f8f;
+  --accent: #f0b429;
   --positive: #22c55e;
   --negative: #ef4444;
 }
@@ -23,8 +25,8 @@
   --color-accent: var(--accent);
   --color-positive: var(--positive);
   --color-negative: var(--negative);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-data-mono);
 }
 
 html {

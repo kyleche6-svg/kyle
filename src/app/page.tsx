@@ -11,6 +11,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { Panel } from "@/components/Panel";
 import { StatNumber } from "@/components/StatNumber";
+import { MarketSkyline } from "@/components/MarketSkyline";
 
 const scatteredTabs = [
   { icon: ChartLineUp, label: "Terminal feed", rotate: "-rotate-3" },
@@ -43,29 +44,32 @@ const pillars = [
 export default function Home() {
   return (
     <div>
-      <div className="mx-auto max-w-6xl px-6 pt-14 pb-4">
-        <div className="max-w-2xl">
-          <h1 className="text-4xl font-semibold tracking-tight">
-            Terminal-grade market intelligence. Self-serve pricing.
-          </h1>
-          <p className="mt-4 text-lg text-muted">
-            USD strength, congressional trade disclosures, and market-moving
-            signals — correlated in one desk, without the enterprise
-            contract.
-          </p>
-          <div className="mt-8 flex gap-3">
-            <Link
-              href="/pricing"
-              className="rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
-            >
-              View pricing
-            </Link>
-            <Link
-              href="/signup"
-              className="rounded-md border border-panel-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-panel"
-            >
-              Create account
-            </Link>
+      <div className="relative overflow-hidden">
+        <MarketSkyline />
+        <div className="relative mx-auto max-w-6xl px-6 pt-14 pb-4">
+          <div className="max-w-2xl">
+            <h1 className="text-4xl font-semibold tracking-tight">
+              Terminal-grade market intelligence. Self-serve pricing.
+            </h1>
+            <p className="mt-4 text-lg text-muted">
+              USD strength, congressional trade disclosures, and
+              market-moving signals — correlated in one desk, without the
+              enterprise contract.
+            </p>
+            <div className="mt-8 flex gap-3">
+              <Link
+                href="/pricing"
+                className="rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
+              >
+                View pricing
+              </Link>
+              <Link
+                href="/signup"
+                className="rounded-md border border-panel-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-panel"
+              >
+                Create account
+              </Link>
+            </div>
           </div>
         </div>
       </div>

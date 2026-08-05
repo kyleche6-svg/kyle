@@ -8,6 +8,7 @@ import {
   TrendUp,
 } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/lib/auth";
+import { Logo } from "@/components/Logo";
 
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: ChartLine },
@@ -21,10 +22,11 @@ export async function NavBar() {
   const session = await auth();
 
   return (
-    <header className="border-b border-panel-border bg-[#080b17]/95 backdrop-blur">
+    <header className="border-b border-panel-border bg-background/95 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
-        <Link href="/" className="text-sm font-semibold tracking-tight">
-          Dollar<span className="text-accent">Watch</span>
+        <Link href="/" className="flex items-center gap-2 text-sm font-semibold tracking-tight">
+          <Logo size={20} />
+          DollarWatch
         </Link>
         <nav className="flex items-center gap-5 text-sm text-muted">
           {links.map((link) => {

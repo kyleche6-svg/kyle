@@ -72,14 +72,32 @@ async function twelveDataSearch(query: string): Promise<StockSearchResult[] | nu
     const data = await res.json();
     if (data.code || !Array.isArray(data.data)) return null;
 
-    return data.data
-      .filter((item: { instrument_type: string }) => item.instrument_type === "Common Stock")
-      .slice(0, 20)
-      .map((item: { symbol: string; instrument_name: string; exchange: string }) => ({
+    const US_EXCHANGES = new Set(["NASDAQ", "NYSE", "NYSE ARCA", "NYSE MKT", "BATS"]);
+    const seen = new Set<string>();
+    const results: StockSearchResult[] = [];
+
+    for (const item of data.data as Array<{
+      symbol: string;
+      instrument_name: string;
+      exchange: string;
+      instrument_type: string;
+      currency: string;
+    }>) {
+      if (item.instrument_type !== "Common Stock") continue;
+      if (item.currency !== "USD") continue;
+      if (!US_EXCHANGES.has(item.exchange)) continue;
+      if (seen.has(item.symbol)) continue;
+
+      seen.add(item.symbol);
+      results.push({
         ticker: item.symbol,
         companyName: item.instrument_name,
         exchange: item.exchange,
-      }));
+      });
+      if (results.length >= 20) break;
+    }
+
+    return results;
   } catch {
     return null;
   }

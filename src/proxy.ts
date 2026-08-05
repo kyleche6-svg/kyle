@@ -1,13 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { checkLoginLimit, checkGeneralLimit } from "@/lib/rate-limit";
+import { checkLoginLimit, checkGeneralLimit, extractClientIp } from "@/lib/rate-limit";
 import { auth } from "@/lib/auth";
-
-function getClientIp(request: NextRequest): string {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-  return request.headers.get("x-real-ip") ?? "unknown";
-}
 
 function logViolation(details: Record<string, string>) {
   console.warn(JSON.stringify({ event: "rate_limit_violation", ...details }));
@@ -26,7 +20,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const ip = getClientIp(request);
+  const ip = extractClientIp(request.headers);
 
   if (pathname === "/api/auth/callback/credentials" && request.method === "POST") {
     let email = "unknown";

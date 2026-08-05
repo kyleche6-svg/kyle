@@ -30,6 +30,13 @@ export default function RefundPage() {
             a chargeback with your card issuer.
           </p>
         </section>
+        <section>
+          <h2 className="mb-2 text-foreground">Contact us</h2>
+          <p>
+            [PLACEHOLDER — replace with your real support address]{" "}
+            billing@yourdomain.com
+          </p>
+        </section>
       </div>
     </div>
   );

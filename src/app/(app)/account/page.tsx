@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { logout } from "@/app/actions/auth";
 import { createPortalSession, createCheckoutSession } from "@/app/actions/billing";
 import { Panel } from "@/components/Panel";
+import { DeleteAccountButton } from "@/components/DeleteAccountButton";
 
 export default async function AccountPage() {
   const session = await auth();
@@ -60,14 +61,17 @@ export default async function AccountPage() {
         </div>
       </Panel>
 
-      <form action={logout} className="mt-8">
-        <button
-          type="submit"
-          className="text-sm text-muted transition-colors hover:text-foreground"
-        >
-          Log out
-        </button>
-      </form>
+      <div className="mt-8 flex items-center gap-6">
+        <form action={logout}>
+          <button
+            type="submit"
+            className="text-sm text-muted transition-colors hover:text-foreground"
+          >
+            Log out
+          </button>
+        </form>
+        <DeleteAccountButton />
+      </div>
     </div>
   );
 }

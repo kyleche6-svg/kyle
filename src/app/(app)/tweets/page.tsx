@@ -39,7 +39,9 @@ export default async function TweetsPage() {
       <h1 className="text-2xl font-semibold">Market-Moving Tweet Tracker</h1>
       <p className="mt-1 text-sm text-muted">
         Tracked posts with tagged tickers and historical price reaction
-        windows. Data and price patterns only — no buy/sell signals.
+        windows. Currently showing mock/seed data — real posts populate
+        here once synced via the X API. Data and price patterns only — no
+        buy/sell signals.
       </p>
 
       <div className="mt-6 flex flex-col gap-4">

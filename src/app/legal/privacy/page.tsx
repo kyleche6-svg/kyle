@@ -50,8 +50,9 @@ export default function PrivacyPage() {
           <p>
             [PLACEHOLDER] If you are located in the EU or California, you
             have the right to access, correct, or delete your personal data,
-            and to object to or restrict certain processing. Contact us to
-            exercise these rights.
+            and to object to or restrict certain processing. You can delete
+            your account and data yourself at any time from the Account
+            page, or contact us (below) to exercise these rights.
           </p>
         </section>
         <section>
@@ -59,7 +60,15 @@ export default function PrivacyPage() {
           <p>
             [PLACEHOLDER] We retain your account data for as long as your
             account is active, and for a limited period after cancellation
-            as required for legal and billing purposes.
+            as required for legal and billing purposes. Deleting your
+            account removes your data immediately.
+          </p>
+        </section>
+        <section>
+          <h2 className="mb-2 text-foreground">7. Contact us</h2>
+          <p>
+            [PLACEHOLDER — replace with your real support address]{" "}
+            privacy@yourdomain.com
           </p>
         </section>
       </div>

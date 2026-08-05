@@ -4,7 +4,8 @@ import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
 import { prisma } from "@/lib/prisma";
-import { signIn, signOut } from "@/lib/auth";
+import { signIn, signOut, auth } from "@/lib/auth";
+import { stripe } from "@/lib/stripe";
 import { SignupFormSchema, type SignupFormState } from "@/lib/definitions";
 import { checkGeneralLimit, checkLoginLimit, getRequestIp } from "@/lib/rate-limit";
 
@@ -77,6 +78,33 @@ export async function login(_state: LoginFormState, formData: FormData) {
 }
 
 export async function logout() {
+  await signOut({ redirect: false });
+  redirect("/");
+}
+
+export async function deleteAccount() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    redirect("/login");
+  }
+
+  const subscription = await prisma.subscription.findUnique({
+    where: { userId: session.user.id },
+  });
+
+  if (subscription?.stripeSubscriptionId) {
+    try {
+      await stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
+    } catch {
+      // Already canceled or Stripe unreachable — don't block account
+      // deletion on a billing-side cleanup failure.
+    }
+  }
+
+  // Subscription row cascades on User delete (see schema.prisma onDelete:
+  // Cascade), so deleting User is sufficient.
+  await prisma.user.delete({ where: { id: session.user.id } });
+
   await signOut({ redirect: false });
   redirect("/");
 }

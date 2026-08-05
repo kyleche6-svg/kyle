@@ -6,6 +6,7 @@ import { logout } from "@/app/actions/auth";
 import { createPortalSession } from "@/app/actions/billing";
 import { Panel } from "@/components/Panel";
 import { DeleteAccountButton } from "@/components/DeleteAccountButton";
+import { ProfileForm } from "@/components/ProfileForm";
 
 export default async function AccountPage() {
   const session = await auth();
@@ -13,9 +14,10 @@ export default async function AccountPage() {
     redirect("/login");
   }
 
-  const subscription = await prisma.subscription.findUnique({
-    where: { userId: session.user.id },
-  });
+  const [user, subscription] = await Promise.all([
+    prisma.user.findUnique({ where: { id: session.user.id } }),
+    prisma.subscription.findUnique({ where: { userId: session.user.id } }),
+  ]);
 
   const isActive = subscription?.status === "active";
 
@@ -25,6 +27,7 @@ export default async function AccountPage() {
 
       <Panel title="Profile" className="mt-8">
         <p className="text-sm">{session.user.email}</p>
+        <ProfileForm name={user?.name ?? null} phone={user?.phone ?? null} />
       </Panel>
 
       <Panel title="Subscription" className="mt-4">

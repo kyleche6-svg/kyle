@@ -58,6 +58,22 @@ export const TRENDING_TICKERS = [
   { ticker: "META", companyName: "Meta Platforms Inc.", basePrice: 592.4 },
   { ticker: "TSLA", companyName: "Tesla Inc.", basePrice: 248.7 },
   { ticker: "JPM", companyName: "JPMorgan Chase & Co.", basePrice: 231.8 },
+  { ticker: "V", companyName: "Visa Inc.", basePrice: 312.6 },
+  { ticker: "WMT", companyName: "Walmart Inc.", basePrice: 92.3 },
+  { ticker: "UNH", companyName: "UnitedHealth Group", basePrice: 486.9 },
+  { ticker: "AVGO", companyName: "Broadcom Inc.", basePrice: 178.2 },
+  { ticker: "LLY", companyName: "Eli Lilly and Co.", basePrice: 812.5 },
+  { ticker: "COST", companyName: "Costco Wholesale Corp.", basePrice: 921.4 },
+  { ticker: "NFLX", companyName: "Netflix Inc.", basePrice: 892.1 },
+  { ticker: "XOM", companyName: "Exxon Mobil Corp.", basePrice: 118.4 },
+  { ticker: "ADBE", companyName: "Adobe Inc.", basePrice: 512.3 },
+  { ticker: "CRM", companyName: "Salesforce Inc.", basePrice: 328.7 },
+  { ticker: "AMD", companyName: "Advanced Micro Devices", basePrice: 168.4 },
+  { ticker: "PEP", companyName: "PepsiCo Inc.", basePrice: 172.9 },
+  { ticker: "DIS", companyName: "Walt Disney Co.", basePrice: 112.6 },
+  { ticker: "BA", companyName: "Boeing Co.", basePrice: 189.3 },
+  { ticker: "UBER", companyName: "Uber Technologies", basePrice: 78.5 },
+  { ticker: "PLTR", companyName: "Palantir Technologies", basePrice: 158.4 },
 ];
 
 const SECTORS = [

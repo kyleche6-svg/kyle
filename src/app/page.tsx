@@ -126,7 +126,7 @@ export default function Home() {
             const Icon = pillar.icon;
             return (
               <Link key={pillar.title} href={pillar.href}>
-                <Panel className="h-full transition-colors hover:border-accent/40">
+                <Panel className="h-full transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_8px_20px_-4px_rgba(0,0,0,0.6),0_24px_40px_-12px_rgba(0,0,0,0.5)]">
                   <Icon size={22} weight="regular" className="text-accent" />
                   <h3 className="mt-3 text-sm font-medium">{pillar.title}</h3>
                   <p className="mt-1.5 text-sm text-muted">{pillar.body}</p>

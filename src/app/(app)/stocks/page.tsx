@@ -53,6 +53,13 @@ export default async function StocksPage({
       )
     : await getStockList();
 
+  const movers = !query
+    ? {
+        gainers: [...stocks].sort((a, b) => b.quote.changePercent - a.quote.changePercent).slice(0, 4),
+        losers: [...stocks].sort((a, b) => a.quote.changePercent - b.quote.changePercent).slice(0, 4),
+      }
+    : null;
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
       <h1 className="text-2xl font-semibold">Stocks</h1>
@@ -78,7 +85,46 @@ export default async function StocksPage({
         </div>
       </form>
 
-      <Panel className="mt-6">
+      {movers && (
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Panel title="Top gainers">
+            <div className="flex flex-col gap-2.5">
+              {movers.gainers.map((stock) => (
+                <Link
+                  key={stock.ticker}
+                  href={`/stocks/${stock.ticker}`}
+                  className="flex items-center justify-between text-sm transition-colors hover:text-accent"
+                >
+                  <span className="font-mono font-medium">{stock.ticker}</span>
+                  <span className="flex items-center gap-1 font-mono text-xs tabular-nums text-positive">
+                    <TrendUp size={12} weight="bold" />
+                    {formatDelta(stock.quote.changePercent)}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </Panel>
+          <Panel title="Top losers">
+            <div className="flex flex-col gap-2.5">
+              {movers.losers.map((stock) => (
+                <Link
+                  key={stock.ticker}
+                  href={`/stocks/${stock.ticker}`}
+                  className="flex items-center justify-between text-sm transition-colors hover:text-accent"
+                >
+                  <span className="font-mono font-medium">{stock.ticker}</span>
+                  <span className="flex items-center gap-1 font-mono text-xs tabular-nums text-negative">
+                    <TrendDown size={12} weight="bold" />
+                    {formatDelta(stock.quote.changePercent)}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </Panel>
+        </div>
+      )}
+
+      <Panel title={query ? undefined : "All stocks"} className="mt-4">
         {stocks.length === 0 ? (
           <p className="text-sm text-muted">No matches for &ldquo;{query}&rdquo;.</p>
         ) : (

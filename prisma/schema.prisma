@@ -1,0 +1,88 @@
+// Prisma schema for DollarWatch
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  passwordHash String
+  createdAt    DateTime      @default(now())
+  subscription Subscription?
+}
+
+enum SubscriptionStatus {
+  none
+  active
+  past_due
+  canceled
+}
+
+model Subscription {
+  id                   String              @id @default(cuid())
+  userId               String              @unique
+  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String?             @unique
+  stripeSubscriptionId String?             @unique
+  status               SubscriptionStatus  @default(none)
+  currentPeriodEnd     DateTime?
+  updatedAt            DateTime            @updatedAt
+}
+
+model TrackedFigure {
+  id       String   @id @default(cuid())
+  name     String
+  xHandle  String   @unique
+  category String
+  posts    Post[]
+}
+
+model Post {
+  id              String          @id @default(cuid())
+  trackedFigureId String
+  trackedFigure   TrackedFigure   @relation(fields: [trackedFigureId], references: [id], onDelete: Cascade)
+  xPostId         String          @unique
+  text            String
+  postedAt        DateTime
+  taggedTickers   String[]
+  priceSnapshots  PriceSnapshot[]
+
+  @@index([postedAt])
+}
+
+model PriceSnapshot {
+  id          String   @id @default(cuid())
+  postId      String
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  ticker      String
+  windowLabel String // "-15m" | "+1h" | "eod"
+  price       Float
+  capturedAt  DateTime @default(now())
+
+  @@index([postId])
+}
+
+enum TradeDirection {
+  buy
+  sell
+}
+
+model Trade {
+  id                String         @id @default(cuid())
+  politicianName    String
+  ticker            String
+  direction         TradeDirection
+  amountRangeLow     Int
+  amountRangeHigh    Int
+  filedDate         DateTime
+  transactionDate   DateTime
+
+  @@index([ticker])
+  @@index([filedDate])
+}

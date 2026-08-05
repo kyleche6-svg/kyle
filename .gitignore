@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# dev-only: grants a subscription with no auth check — never ship this
+/scripts/dev-activate-sub.mjs

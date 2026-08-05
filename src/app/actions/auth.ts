@@ -21,7 +21,12 @@ export async function signup(_state: SignupFormState, formData: FormData) {
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
-    return { message: "An account with this email already exists." };
+    // Generic on purpose — a distinct "already exists" message lets an
+    // attacker enumerate registered emails.
+    return {
+      message:
+        "Something went wrong creating your account. If you already have one, try logging in instead.",
+    };
   }
 
   const passwordHash = await bcrypt.hash(password, 10);

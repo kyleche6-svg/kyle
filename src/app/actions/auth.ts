@@ -8,6 +8,7 @@ import { signIn, signOut, auth } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
 import { SignupFormSchema, type SignupFormState } from "@/lib/definitions";
 import { checkGeneralLimit, checkLoginLimit, getRequestIp } from "@/lib/rate-limit";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 function logRateLimitViolation(details: Record<string, string>) {
   console.warn(JSON.stringify({ event: "rate_limit_violation", ...details }));
@@ -19,6 +20,14 @@ export async function signup(_state: SignupFormState, formData: FormData) {
   if (!success) {
     logRateLimitViolation({ type: "signup", ip });
     return { message: "Too many attempts. Try again in 15 minutes." };
+  }
+
+  const turnstileOk = await verifyTurnstile(
+    formData.get("cf-turnstile-response") as string | null,
+    ip,
+  );
+  if (!turnstileOk) {
+    return { message: "Bot verification failed. Please try again." };
   }
 
   const validatedFields = SignupFormSchema.safeParse({
@@ -59,6 +68,14 @@ export async function login(_state: LoginFormState, formData: FormData) {
   if (!success) {
     logRateLimitViolation({ type: "login", ip, email });
     return { message: "Too many login attempts. Try again in 15 minutes." };
+  }
+
+  const turnstileOk = await verifyTurnstile(
+    formData.get("cf-turnstile-response") as string | null,
+    ip,
+  );
+  if (!turnstileOk) {
+    return { message: "Bot verification failed. Please try again." };
   }
 
   try {

@@ -24,7 +24,7 @@ async function enforceGeneralLimit(userId: string, action: string) {
   }
 }
 
-export async function createCheckoutSession() {
+export async function createCheckoutSession(formData: FormData) {
   const session = await auth();
   if (!session?.user?.id || !session.user.email) {
     redirect("/login");
@@ -32,10 +32,14 @@ export async function createCheckoutSession() {
 
   await enforceGeneralLimit(session.user.id, "checkout");
 
-  const priceId = process.env.STRIPE_PRICE_ID;
+  const plan = formData.get("plan") === "yearly" ? "yearly" : "monthly";
+  const priceId =
+    plan === "yearly"
+      ? process.env.STRIPE_PRICE_ID_YEARLY
+      : process.env.STRIPE_PRICE_ID_MONTHLY;
   if (!priceId) {
     throw new Error(
-      "Billing is not configured yet — set STRIPE_PRICE_ID in .env",
+      `Billing is not configured yet — set STRIPE_PRICE_ID_${plan.toUpperCase()} in .env`,
     );
   }
 

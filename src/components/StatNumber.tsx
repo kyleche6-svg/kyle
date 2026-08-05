@@ -1,3 +1,5 @@
+import { TrendUp, TrendDown, Minus } from "@phosphor-icons/react/dist/ssr";
+
 export function StatNumber({
   label,
   value,
@@ -16,7 +18,7 @@ export function StatNumber({
     <div>
       <p className="text-xs text-muted">{label}</p>
       <p
-        className={`mt-1 text-3xl font-semibold tabular-nums ${
+        className={`mt-1 font-mono text-3xl font-semibold tabular-nums ${
           accent ? "text-accent" : "text-foreground"
         }`}
       >
@@ -24,14 +26,21 @@ export function StatNumber({
       </p>
       {delta && (
         <p
-          className={`mt-1 text-xs tabular-nums ${
+          className={`mt-1 flex items-center gap-1 font-mono text-xs tabular-nums ${
             isPositive
-              ? "text-emerald-400"
+              ? "text-positive"
               : isNegative
-                ? "text-red-400"
+                ? "text-negative"
                 : "text-muted"
           }`}
         >
+          {isPositive ? (
+            <TrendUp size={12} weight="bold" />
+          ) : isNegative ? (
+            <TrendDown size={12} weight="bold" />
+          ) : (
+            <Minus size={12} weight="bold" />
+          )}
           {delta}
         </p>
       )}

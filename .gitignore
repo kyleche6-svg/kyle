@@ -44,3 +44,7 @@ next-env.d.ts
 
 # dev-only: grants a subscription with no auth check — never ship this
 /scripts/dev-activate-sub.mjs
+
+# local design tooling used to help build the UI — not an app dependency
+/.agents/skills/impeccable
+/.claude/skills/impeccable

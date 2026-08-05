@@ -4,7 +4,11 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt" },
+  // Explicit expiry rather than relying on the library default — this app
+  // handles billing + financial data, so sessions expire after 7 days of
+  // inactivity (refreshed on activity within that window) rather than a
+  // longer default.
+  session: { strategy: "jwt", maxAge: 7 * 24 * 60 * 60, updateAge: 24 * 60 * 60 },
   pages: {
     signIn: "/login",
   },

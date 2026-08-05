@@ -1,8 +1,9 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logout } from "@/app/actions/auth";
-import { createPortalSession, createCheckoutSession } from "@/app/actions/billing";
+import { createPortalSession } from "@/app/actions/billing";
 import { Panel } from "@/components/Panel";
 import { DeleteAccountButton } from "@/components/DeleteAccountButton";
 
@@ -49,14 +50,12 @@ export default async function AccountPage() {
               </button>
             </form>
           ) : (
-            <form action={createCheckoutSession}>
-              <button
-                type="submit"
-                className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
-              >
-                Subscribe
-              </button>
-            </form>
+            <Link
+              href="/pricing"
+              className="inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
+            >
+              View plans
+            </Link>
           )}
         </div>
       </Panel>

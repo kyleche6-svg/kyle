@@ -86,3 +86,26 @@ model Trade {
   @@index([ticker])
   @@index([filedDate])
 }
+
+enum EventImpact {
+  high
+  medium
+  low
+}
+
+// Economic calendar (ForexFactory-style) — mock-seeded, no official free
+// API exists (see plan notes on the politician-trades feature for the same
+// situation). Real ingestion via a third-party economic-calendar API is a
+// documented follow-up.
+model EconomicEvent {
+  id         String      @id @default(cuid())
+  eventName  String
+  currency   String
+  impact     EventImpact
+  eventTime  DateTime
+  actual     String?
+  forecast   String?
+  previous   String?
+
+  @@index([eventTime])
+}

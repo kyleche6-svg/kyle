@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { signup } from "@/app/actions/auth";
 import { Panel } from "@/components/Panel";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 export default function SignupPage() {
   const [state, action, pending] = useActionState(signup, undefined);
@@ -52,6 +53,7 @@ export default function SignupPage() {
               </p>
             )}
           </div>
+          <TurnstileWidget />
           {state?.message && (
             <p className="text-xs text-red-400">{state.message}</p>
           )}

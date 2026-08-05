@@ -20,13 +20,12 @@ export const COMMODITIES = [
   { symbol: "XAG/USD", label: "Silver", basePrice: 28.5 },
 ];
 
-const USD_INDEX_BASE = 104.3;
 const CACHE_SECONDS = 300; // refresh on an interval, not per-request
 
 // Deterministic pseudo-random so mock values stay stable within a day
 // (varies across days so a demo doesn't look frozen), rather than jumping
 // on every render.
-function seededRandom(seed: string): number {
+export function seededRandom(seed: string): number {
   let hash = 0;
   for (let i = 0; i < seed.length; i++) {
     hash = (hash << 5) - hash + seed.charCodeAt(i);
@@ -55,7 +54,7 @@ function mockSeries(basePrice: number, seedKey: string, points = 30): SeriesPoin
     const date = new Date();
     date.setDate(date.getDate() - i);
     const rand = seededRandom(`${seedKey}:${date.toISOString().slice(0, 10)}`);
-    value = value * (1 + (rand - 0.5) * 0.01);
+    value = value * (1 + (rand - 0.5) * 0.03);
     series.push({ date: date.toISOString().slice(0, 10), value });
   }
   return series;
@@ -87,6 +86,15 @@ async function twelveDataQuote(
   }
 }
 
+export async function getQuote(
+  symbol: string,
+  label: string,
+  basePrice: number,
+): Promise<Quote> {
+  const real = await twelveDataQuote(symbol, label);
+  return real ?? mockQuote(symbol, label, basePrice);
+}
+
 async function twelveDataSeries(
   symbol: string,
   points = 30,
@@ -113,15 +121,6 @@ async function twelveDataSeries(
   }
 }
 
-export async function getQuote(
-  symbol: string,
-  label: string,
-  basePrice: number,
-): Promise<Quote> {
-  const real = await twelveDataQuote(symbol, label);
-  return real ?? mockQuote(symbol, label, basePrice);
-}
-
 export async function getSeries(
   symbol: string,
   basePrice: number,
@@ -129,12 +128,4 @@ export async function getSeries(
 ): Promise<SeriesPoint[]> {
   const real = await twelveDataSeries(symbol, points);
   return real ?? mockSeries(basePrice, symbol, points);
-}
-
-export async function getUsdIndexQuote(): Promise<Quote> {
-  return getQuote("DXY", "DXY", USD_INDEX_BASE);
-}
-
-export async function getUsdIndexSeries(): Promise<SeriesPoint[]> {
-  return getSeries("DXY", USD_INDEX_BASE);
 }

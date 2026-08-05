@@ -1,3 +1,4 @@
+import { TrendUp, TrendDown } from "@phosphor-icons/react/dist/ssr";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
 import { getRecentTrades, getMonthlyBuyLeaderboard } from "@/lib/trades";
 import { Panel } from "@/components/Panel";
@@ -40,8 +41,8 @@ export default async function PoliticiansPage() {
             {leaderboard.map((row, i) => (
               <div key={row.ticker} className="rounded-md border border-panel-border p-3">
                 <p className="text-xs text-muted">#{i + 1}</p>
-                <p className="mt-1 font-medium">{row.ticker}</p>
-                <p className="text-xs text-accent">{row.buyCount} buys</p>
+                <p className="mt-1 font-mono font-medium">{row.ticker}</p>
+                <p className="text-xs text-positive">{row.buyCount} buys</p>
               </div>
             ))}
           </div>
@@ -62,28 +63,36 @@ export default async function PoliticiansPage() {
               </tr>
             </thead>
             <tbody>
-              {trades.map((trade) => (
-                <tr key={trade.id} className="border-b border-panel-border/50">
-                  <td className="py-2 pr-4">{trade.politicianName}</td>
-                  <td className="py-2 pr-4 font-medium">{trade.ticker}</td>
-                  <td className="py-2 pr-4">
-                    <span
-                      className={
-                        trade.direction === "buy" ? "text-emerald-400" : "text-red-400"
-                      }
-                    >
-                      {trade.direction}
-                    </span>
-                  </td>
-                  <td className="py-2 pr-4 text-muted">
-                    {formatAmountRange(trade.amountRangeLow, trade.amountRangeHigh)}
-                  </td>
-                  <td className="py-2 pr-4 text-muted">
-                    {formatDate(trade.transactionDate)}
-                  </td>
-                  <td className="py-2 text-muted">{formatDate(trade.filedDate)}</td>
-                </tr>
-              ))}
+              {trades.map((trade) => {
+                const isBuy = trade.direction === "buy";
+                return (
+                  <tr key={trade.id} className="border-b border-panel-border/50">
+                    <td className="py-2 pr-4">{trade.politicianName}</td>
+                    <td className="py-2 pr-4 font-mono font-medium">{trade.ticker}</td>
+                    <td className="py-2 pr-4">
+                      <span
+                        className={`flex items-center gap-1 ${
+                          isBuy ? "text-positive" : "text-negative"
+                        }`}
+                      >
+                        {isBuy ? (
+                          <TrendUp size={12} weight="bold" />
+                        ) : (
+                          <TrendDown size={12} weight="bold" />
+                        )}
+                        {trade.direction}
+                      </span>
+                    </td>
+                    <td className="py-2 pr-4 font-mono text-muted tabular-nums">
+                      {formatAmountRange(trade.amountRangeLow, trade.amountRangeHigh)}
+                    </td>
+                    <td className="py-2 pr-4 text-muted">
+                      {formatDate(trade.transactionDate)}
+                    </td>
+                    <td className="py-2 text-muted">{formatDate(trade.filedDate)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

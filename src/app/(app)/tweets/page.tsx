@@ -1,3 +1,4 @@
+import { UserCircle } from "@phosphor-icons/react/dist/ssr";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
 import { getTrackedPosts } from "@/lib/tweets";
 import { Panel } from "@/components/Panel";
@@ -48,11 +49,14 @@ export default async function TweetsPage() {
         {byTicker.map(({ post, grouped }) => (
           <Panel key={post.id}>
             <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium">{post.trackedFigure.name}</p>
-                <p className="text-xs text-muted">
-                  @{post.trackedFigure.xHandle} · {post.trackedFigure.category}
-                </p>
+              <div className="flex items-start gap-2.5">
+                <UserCircle size={28} weight="light" className="mt-0.5 text-muted" />
+                <div>
+                  <p className="text-sm font-medium">{post.trackedFigure.name}</p>
+                  <p className="text-xs text-muted">
+                    @{post.trackedFigure.xHandle} · {post.trackedFigure.category}
+                  </p>
+                </div>
               </div>
               <p className="whitespace-nowrap text-xs text-muted">
                 {formatDate(post.postedAt)}
@@ -66,7 +70,7 @@ export default async function TweetsPage() {
                 {post.taggedTickers.map((ticker) => (
                   <span
                     key={ticker}
-                    className="rounded-full border border-panel-border px-2.5 py-0.5 text-xs text-accent"
+                    className="rounded-full border border-panel-border px-2.5 py-0.5 font-mono text-xs text-accent"
                   >
                     {ticker}
                   </span>
@@ -78,14 +82,14 @@ export default async function TweetsPage() {
               <div className="mt-4 flex flex-col gap-3 border-t border-panel-border pt-4">
                 {Array.from(grouped.entries()).map(([ticker, snapshots]) => (
                   <div key={ticker} className="flex items-center gap-4 text-xs">
-                    <span className="w-16 font-medium text-foreground">{ticker}</span>
+                    <span className="w-16 font-mono font-medium text-foreground">{ticker}</span>
                     <div className="flex flex-1 gap-4">
                       {WINDOW_ORDER.map((windowLabel) => {
                         const snapshot = snapshots.find((s) => s.windowLabel === windowLabel);
                         return (
                           <div key={windowLabel}>
                             <p className="text-muted">{WINDOW_LABELS[windowLabel]}</p>
-                            <p className="mt-0.5 tabular-nums text-foreground">
+                            <p className="mt-0.5 font-mono tabular-nums text-foreground">
                               {snapshot ? snapshot.price.toFixed(2) : "—"}
                             </p>
                           </div>

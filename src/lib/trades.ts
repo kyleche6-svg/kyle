@@ -7,6 +7,46 @@ export async function getRecentTrades(limit = 50) {
   });
 }
 
+export async function getPoliticianTrades(politicianName: string) {
+  return prisma.trade.findMany({
+    where: { politicianName },
+    orderBy: { filedDate: "desc" },
+  });
+}
+
+export async function getPoliticianPortfolio(politicianName: string) {
+  const trades = await prisma.trade.findMany({ where: { politicianName } });
+
+  const byTicker = new Map<
+    string,
+    { ticker: string; buyTotal: number; sellTotal: number; buyCount: number; sellCount: number }
+  >();
+
+  for (const trade of trades) {
+    const midpoint = (trade.amountRangeLow + trade.amountRangeHigh) / 2;
+    const existing = byTicker.get(trade.ticker) ?? {
+      ticker: trade.ticker,
+      buyTotal: 0,
+      sellTotal: 0,
+      buyCount: 0,
+      sellCount: 0,
+    };
+
+    if (trade.direction === "buy") {
+      existing.buyTotal += midpoint;
+      existing.buyCount += 1;
+    } else {
+      existing.sellTotal += midpoint;
+      existing.sellCount += 1;
+    }
+    byTicker.set(trade.ticker, existing);
+  }
+
+  return Array.from(byTicker.values())
+    .map((row) => ({ ...row, netEstimate: row.buyTotal - row.sellTotal }))
+    .sort((a, b) => Math.abs(b.netEstimate) - Math.abs(a.netEstimate));
+}
+
 export async function getMonthlyBuyLeaderboard(limit = 10) {
   const startOfMonth = new Date();
   startOfMonth.setDate(1);

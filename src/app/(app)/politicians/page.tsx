@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { TrendUp, TrendDown } from "@phosphor-icons/react/dist/ssr";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
 import { getRecentTrades, getMonthlyBuyLeaderboard } from "@/lib/trades";
@@ -67,7 +68,14 @@ export default async function PoliticiansPage() {
                 const isBuy = trade.direction === "buy";
                 return (
                   <tr key={trade.id} className="border-b border-panel-border/50">
-                    <td className="py-2 pr-4">{trade.politicianName}</td>
+                    <td className="py-2 pr-4">
+                      <Link
+                        href={`/politicians/${encodeURIComponent(trade.politicianName)}`}
+                        className="hover:text-accent"
+                      >
+                        {trade.politicianName}
+                      </Link>
+                    </td>
                     <td className="py-2 pr-4 font-mono font-medium">{trade.ticker}</td>
                     <td className="py-2 pr-4">
                       <span

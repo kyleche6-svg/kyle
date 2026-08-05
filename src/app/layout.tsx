@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DollarWatch — Market Intelligence Dashboard",
+  title: "DollarWatch — Terminal-Grade Market Intelligence",
   description:
-    "USD strength, congressional trades, and market-moving posts in one dashboard.",
+    "USD strength, congressional trade disclosures, and market-moving signals — correlated in one desk, self-serve pricing.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -29,11 +29,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col bg-background text-foreground">
         {/*
           IMPECCABLE DIRECTION CONTRACT (landing page, src/app/page.tsx)
-          THESIS: Scattered tabs vs one dashboard — refuses the generic "hero stat card" SaaS default by dramatizing the before-state literally.
+          THESIS: Professional's scattered desk (terminal feed, compliance feed, research desk, spreadsheet) vs one dashboard — refuses the generic "hero stat card" SaaS default by dramatizing the before-state literally, reframed toward a professional/institutional-style audience per product-owner direction (PRODUCT.md Users, updated this session).
           OWN-WORLD: Existing DollarWatch system — bg #020617, panel #0e1223, indigo accent #5e6ad2, semantic green/red reserved for gain/loss only, Geist Mono for data, Phosphor icons.
-          STORY: Visitor sees their own current workflow (X, important news, a broker app, a spreadsheet — scattered, tilted, disconnected) collapse into one clean DollarWatch panel. Believes: this replaces my open tabs. Does: view pricing or create account.
+          STORY: Visitor (a finance professional) sees their own scattered workflow collapse into one clean DollarWatch panel. Believes: terminal-grade tooling at self-serve pricing, not an enterprise sales process. Does: view pricing or create account. Honest boundary: no claim of actual institutional/bank customers — none exist yet (PRODUCT.md Evidence on Hand).
           FIRST VIEWPORT: Headline + subhead + CTA row, then the before/after strip below the fold line — scattered chip cluster (rotated, muted) -> ArrowRight -> single clean live-feeling Panel.
-          FORM: Candidate 4 of 7 (problem/solution narrative), seed key 6cb51e30, assigned via concept-seed.mjs --scope surface --mode persuade.
+          FORM: Candidate 4 of 7 (problem/solution narrative), seed key 6cb51e30, assigned via concept-seed.mjs --scope surface --mode persuade. Copy reframed in-place per explicit product-owner request; structure/visual world unchanged (not a re-roll).
           FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md.
         */}
         <NavBar />

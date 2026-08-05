@@ -8,15 +8,15 @@ web
 
 ## Users
 
-Retail investors who want a single dashboard instead of checking Twitter/X, ForexFactory, and a broker app separately. Primary user is comfortable with financial terminology (tickers, forex pairs, analyst ratings) but is not a professional trader — a self-directed investor managing their own portfolio, not institutional.
+Reframed (this session) toward professional/institutional-style users — analysts, desk traders, and finance professionals who expect terminal-grade tooling — rather than casual retail. Still self-serve subscription (no enterprise sales motion exists), so the audience is a professional working alone or on a small team, not a procurement-gated institution. Comfortable with financial terminology (tickers, forex pairs, analyst ratings, EPS, PEG ratios) and expects density and precision over hand-holding.
 
 ## Product Purpose
 
-A market-intelligence dashboard that surfaces three things retail investors otherwise piece together manually: USD/forex/commodity price movement, congressional stock trade disclosures (STOCK Act filings), and market-moving social posts correlated with historical price reaction. Subscription SaaS gated by Stripe.
+A market-intelligence dashboard that surfaces what a professional would otherwise piece together across a Bloomberg-style terminal, compliance feeds, and a research desk: USD/forex/commodity price movement, congressional stock trade disclosures (STOCK Act filings), and market-moving social posts correlated with historical price reaction. Subscription SaaS gated by Stripe (self-serve, not enterprise sales).
 
 ## Positioning
 
-Correlates public information (politician trades, market-moving posts, economic calendar) with price action in one place, without ever generating its own buy/sell predictions — a hard constraint the product owner set explicitly. Real third-party analyst consensus data (Buy/Hold/Sell ratings, price targets) is displayed and attributed; the app never outputs its own forecast.
+Correlates public information (politician trades, market-moving posts, economic calendar) with price action in one place, without ever generating its own buy/sell predictions — a hard constraint the product owner set explicitly. Real third-party analyst consensus data (Buy/Hold/Sell ratings, price targets) is displayed and attributed; the app never outputs its own forecast. Positioning is professional-grade tooling, not a claim of institutional/bank customers — no such customers exist yet (see Evidence on Hand); the tone is aimed at how a finance professional works, not who currently uses the product.
 
 ## Operating Context
 

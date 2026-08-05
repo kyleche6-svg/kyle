@@ -1,8 +1,8 @@
 import Link from "next/link";
 import {
-  XLogo,
-  Calendar,
-  ChartLine,
+  ChartLineUp,
+  ShieldCheck,
+  BookOpen,
   Table,
   ArrowRight,
   Bank,
@@ -13,9 +13,9 @@ import { Panel } from "@/components/Panel";
 import { StatNumber } from "@/components/StatNumber";
 
 const scatteredTabs = [
-  { icon: XLogo, label: "X / Twitter", rotate: "-rotate-3" },
-  { icon: Calendar, label: "Important News", rotate: "rotate-2" },
-  { icon: ChartLine, label: "Broker app", rotate: "-rotate-1" },
+  { icon: ChartLineUp, label: "Terminal feed", rotate: "-rotate-3" },
+  { icon: ShieldCheck, label: "Compliance feed", rotate: "rotate-2" },
+  { icon: BookOpen, label: "Research desk", rotate: "-rotate-1" },
   { icon: Table, label: "A spreadsheet", rotate: "rotate-3" },
 ];
 
@@ -23,19 +23,19 @@ const pillars = [
   {
     icon: TrendUp,
     title: "Stocks",
-    body: "Live prices with real analyst consensus — Buy/Hold/Sell counts and price targets, never app-generated calls.",
+    body: "Live pricing with real analyst consensus — Buy/Hold/Sell counts and price targets, sourced and attributed, never generated in-house.",
     href: "/stocks",
   },
   {
     icon: Bank,
     title: "Politicians",
-    body: "Congressional stock trade disclosures, feed and monthly leaderboard.",
+    body: "Congressional trade disclosures (STOCK Act filings), tracked as a feed and monthly leaderboard.",
     href: "/politicians",
   },
   {
     icon: ChatCircleText,
     title: "Tweets",
-    body: "Market-moving posts tagged to tickers, with historical price-reaction windows.",
+    body: "Market-moving posts correlated to tickers, with historical price-reaction windows.",
     href: "/tweets",
   },
 ];
@@ -46,12 +46,12 @@ export default function Home() {
       <div className="mx-auto max-w-6xl px-6 pt-14 pb-4">
         <div className="max-w-2xl">
           <h1 className="text-4xl font-semibold tracking-tight">
-            Everything you check before the market opens. One dashboard.
+            Terminal-grade market intelligence. Self-serve pricing.
           </h1>
           <p className="mt-4 text-lg text-muted">
-            USD strength, congressional trading disclosures, and
-            market-moving posts — tracked and correlated, so you stop
-            switching tabs.
+            USD strength, congressional trade disclosures, and market-moving
+            signals — correlated in one desk, without the enterprise
+            contract.
           </p>
           <div className="mt-8 flex gap-3">
             <Link

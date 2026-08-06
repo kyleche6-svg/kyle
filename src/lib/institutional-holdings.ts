@@ -144,3 +144,29 @@ export async function getFundPortfolioByCik(cik: string): Promise<FundPortfolio 
   if (!fund) return null;
   return fetchLatestPortfolio(fund, 30);
 }
+
+export type FilingHistoryEntry = { filingDate: string; accessionNumber: string; edgarUrl: string };
+
+// Every past 13F-HR this filer has on record with the SEC — real filing
+// history, not just the single latest snapshot shown elsewhere on the page.
+export async function getFilingHistory(cik: string, limit = 8): Promise<FilingHistoryEntry[]> {
+  const submissions = await secJson(`https://data.sec.gov/submissions/CIK${cik}.json`);
+  const recent = submissions?.filings?.recent;
+  if (!recent?.form) return [];
+
+  const cikNumeric = cik.replace(/^0+/, "");
+  const entries: FilingHistoryEntry[] = [];
+
+  for (let i = 0; i < recent.form.length && entries.length < limit; i++) {
+    if (recent.form[i] !== "13F-HR") continue;
+    const accessionNumber: string = recent.accessionNumber[i];
+    const accessionNoDashes = accessionNumber.replace(/-/g, "");
+    entries.push({
+      filingDate: recent.filingDate[i],
+      accessionNumber,
+      edgarUrl: `https://www.sec.gov/Archives/edgar/data/${cikNumeric}/${accessionNoDashes}/${accessionNumber}-index.htm`,
+    });
+  }
+
+  return entries;
+}

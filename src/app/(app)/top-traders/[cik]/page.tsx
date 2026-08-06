@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Buildings, Sparkle } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, ArrowSquareOut, Buildings, Sparkle } from "@phosphor-icons/react/dist/ssr";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
-import { getFundPortfolioByCik } from "@/lib/institutional-holdings";
+import { getFundPortfolioByCik, getFilingHistory } from "@/lib/institutional-holdings";
 import { getSpeculativeContext } from "@/lib/holdings-context";
 import { searchStocks } from "@/lib/stock-search";
 import { getCompanyProfile } from "@/lib/stocks";
 import { Panel } from "@/components/Panel";
+import { StatNumber } from "@/components/StatNumber";
 import { HoldingsPie } from "@/components/HoldingsPie";
 import { Disclaimer } from "@/components/Disclaimer";
 
@@ -40,10 +41,13 @@ export default async function TopTraderDetailPage({ params }: { params: Promise<
   const fund = await getFundPortfolioByCik(cik);
   if (!fund) notFound();
 
-  const [notes, resolvedTickers] = await Promise.all([
+  const [notes, resolvedTickers, filingHistory] = await Promise.all([
     getSpeculativeContext(fund, COMPANY_HISTORY_COUNT),
     Promise.all(fund.holdings.slice(0, COMPANY_HISTORY_COUNT).map((h) => resolveTicker(h.issuer))),
+    getFilingHistory(cik),
   ]);
+
+  const top3Weight = fund.holdings.slice(0, 3).reduce((sum, h) => sum + h.weight, 0);
 
   const profiles = await Promise.all(
     resolvedTickers.map((resolved) =>
@@ -73,7 +77,22 @@ export default async function TopTraderDetailPage({ params }: { params: Promise<
         filing window.
       </p>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="stagger-children mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Panel>
+          <StatNumber label="13F portfolio value" value={fund.totalValueUsd > 0 ? formatCompact(fund.totalValueUsd) : "—"} />
+        </Panel>
+        <Panel>
+          <StatNumber label="Disclosed positions" value={String(fund.holdings.length)} />
+        </Panel>
+        <Panel>
+          <StatNumber label="Top 3 concentration" value={`${(top3Weight * 100).toFixed(0)}%`} />
+        </Panel>
+        <Panel>
+          <StatNumber label="Last filed" value={formatFilingDate(fund.filingDate)} />
+        </Panel>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Panel title="Portfolio composition" className="lg:col-span-1">
           <HoldingsPie data={fund.holdings.slice(0, 10).map((h) => ({ ticker: h.issuer.split(" ")[0], value: h.valueUsd }))} />
           <p className="mt-2 text-center text-[11px] text-muted">Top 10 positions by disclosed 13F value.</p>
@@ -151,6 +170,31 @@ export default async function TopTraderDetailPage({ params }: { params: Promise<
           })}
         </div>
       </Panel>
+
+      {filingHistory.length > 0 && (
+        <Panel title="Filing history" className="mt-4">
+          <p className="text-xs text-muted">
+            Every 13F-HR this filer has on record with the SEC, most recent first — real filing
+            dates, linked to the source document on EDGAR.
+          </p>
+          <div className="mt-3 flex flex-col divide-y divide-panel-border">
+            {filingHistory.map((filing) => (
+              <a
+                key={filing.accessionNumber}
+                href={filing.edgarUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center justify-between py-2.5 text-sm transition-colors hover:text-accent"
+              >
+                <span>13F-HR filed {formatFilingDate(filing.filingDate)}</span>
+                <span className="flex items-center gap-1 text-xs text-muted group-hover:text-accent">
+                  View on EDGAR <ArrowSquareOut size={12} />
+                </span>
+              </a>
+            ))}
+          </div>
+        </Panel>
+      )}
 
       <div className="mt-6">
         <Disclaimer />

@@ -66,7 +66,10 @@ function parseInfoTable(xml: string): { issuer: string; cusip: string; value: nu
     .filter((row): row is { issuer: string; cusip: string; value: number } => row !== null);
 }
 
-async function fetchLatestPortfolio(fund: (typeof TRACKED_FUNDS)[number]): Promise<FundPortfolio> {
+async function fetchLatestPortfolio(
+  fund: (typeof TRACKED_FUNDS)[number],
+  holdingsLimit = 10,
+): Promise<FundPortfolio> {
   const empty: FundPortfolio = {
     name: fund.name,
     manager: fund.manager,
@@ -123,7 +126,7 @@ async function fetchLatestPortfolio(fund: (typeof TRACKED_FUNDS)[number]): Promi
     cik: fund.cik,
     filingDate,
     totalValueUsd,
-    holdings: merged.slice(0, 10).map((r) => ({
+    holdings: merged.slice(0, holdingsLimit).map((r) => ({
       issuer: r.issuer,
       cusip: r.cusip,
       valueUsd: r.value,
@@ -134,4 +137,10 @@ async function fetchLatestPortfolio(fund: (typeof TRACKED_FUNDS)[number]): Promi
 
 export async function getTopTraderPortfolios(): Promise<FundPortfolio[]> {
   return Promise.all(TRACKED_FUNDS.map((fund) => fetchLatestPortfolio(fund)));
+}
+
+export async function getFundPortfolioByCik(cik: string): Promise<FundPortfolio | null> {
+  const fund = TRACKED_FUNDS.find((f) => f.cik === cik);
+  if (!fund) return null;
+  return fetchLatestPortfolio(fund, 30);
 }

@@ -57,7 +57,7 @@ function percentile(sorted: number[], p: number): number {
 // A histogram over realized returns is an empirical probability
 // distribution — how the actual outcomes were spread out — not a model of
 // future odds.
-function buildHistogram(sorted: number[], buckets = 10): HistogramBucket[] {
+export function buildHistogram(sorted: number[], buckets = 10): HistogramBucket[] {
   const min = sorted[0];
   const max = sorted[sorted.length - 1];
   const span = max - min || 1;

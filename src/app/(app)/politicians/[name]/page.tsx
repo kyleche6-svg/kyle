@@ -6,6 +6,8 @@ import { getRealTradesForPolitician, getRealPoliticianPortfolio } from "@/lib/re
 import { getPoliticianPerformance } from "@/lib/politician-performance";
 import { Panel } from "@/components/Panel";
 import { HoldingsPie } from "@/components/HoldingsPie";
+import { PerformanceTrendChart } from "@/components/PerformanceTrendChart";
+import { ReturnHistogram } from "@/components/ReturnHistogram";
 import { Disclaimer } from "@/components/Disclaimer";
 
 function formatPct(value: number | null) {
@@ -105,6 +107,27 @@ export default async function PoliticianDetailPage({
           Based on {performance.positionsAnalyzed} top position{performance.positionsAnalyzed === 1 ? "" : "s"} by
           disclosed dollar amount{performance.positionsSkipped > 0 ? ` (${performance.positionsSkipped} skipped — insufficient price history)` : ""}.
         </p>
+
+        {performance.trend.length > 1 && (
+          <div className="mt-4 border-t border-panel-border pt-4">
+            <p className="mb-2 flex items-center gap-3 text-xs text-muted">
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-0.5 w-3 bg-accent" /> Disclosed buys (indexed to 100)
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-0.5 w-3 border-t border-dashed border-muted" /> S&amp;P 500
+              </span>
+            </p>
+            <PerformanceTrendChart data={performance.trend} />
+          </div>
+        )}
+
+        {performance.histogram.length > 0 && (
+          <div className="mt-4 border-t border-panel-border pt-4">
+            <p className="mb-2 text-xs text-muted">Spread of estimated returns across analyzed positions</p>
+            <ReturnHistogram data={performance.histogram} />
+          </div>
+        )}
       </Panel>
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">

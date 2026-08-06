@@ -11,15 +11,15 @@ export type HoldingContext = { issuer: string; note: string };
 const cache = new Map<string, { notes: HoldingContext[]; expiresAt: number }>();
 const CACHE_MS = 12 * 60 * 60 * 1000;
 
-export async function getSpeculativeContext(fund: FundPortfolio): Promise<HoldingContext[]> {
+export async function getSpeculativeContext(fund: FundPortfolio, count = 5): Promise<HoldingContext[]> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey || fund.holdings.length === 0) return [];
 
-  const cacheKey = `${fund.cik}:${fund.filingDate}`;
+  const cacheKey = `${fund.cik}:${fund.filingDate}:${count}`;
   const cached = cache.get(cacheKey);
   if (cached && Date.now() < cached.expiresAt) return cached.notes;
 
-  const top = fund.holdings.slice(0, 5);
+  const top = fund.holdings.slice(0, count);
   const client = new Groq({ apiKey });
 
   try {

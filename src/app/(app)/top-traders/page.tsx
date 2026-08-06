@@ -1,4 +1,5 @@
-import { Buildings, Sparkle } from "@phosphor-icons/react/dist/ssr";
+import Link from "next/link";
+import { Buildings, Sparkle, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
 import { getTopTraderPortfolios } from "@/lib/institutional-holdings";
 import { getSpeculativeContext } from "@/lib/holdings-context";
@@ -46,7 +47,8 @@ export default async function TopTradersPage() {
         {funds.map((fund, i) => {
           const notes = contextByFund[i];
           return (
-            <Panel key={fund.cik}>
+            <Link key={fund.cik} href={`/top-traders/${fund.cik}`} className="block">
+            <Panel>
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-2.5">
                   <Buildings size={22} weight="light" className="mt-0.5 text-accent" />
@@ -89,7 +91,11 @@ export default async function TopTradersPage() {
                   })}
                 </div>
               )}
+              <p className="mt-4 flex items-center gap-1 text-xs font-medium text-accent">
+                View full portfolio <ArrowRight size={12} weight="bold" />
+              </p>
             </Panel>
+            </Link>
           );
         })}
       </div>

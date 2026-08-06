@@ -12,10 +12,16 @@ import {
   TRENDING_TICKERS,
 } from "@/lib/stocks";
 import { searchStocks } from "@/lib/stock-search";
+import { getHistoricalReturnFrequency } from "@/lib/historical-stats";
 import { Panel } from "@/components/Panel";
 import { StatNumber } from "@/components/StatNumber";
 import { StockPriceBarChart } from "@/components/StockPriceBarChart";
+import { ReturnHistogram } from "@/components/ReturnHistogram";
 import { Disclaimer } from "@/components/Disclaimer";
+
+function formatPct(value: number | null, digits = 1) {
+  return value === null ? "—" : `${value >= 0 ? "+" : ""}${(value * 100).toFixed(digits)}%`;
+}
 
 const CONSENSUS_LABELS: Record<string, string> = {
   strong_buy: "Strong Buy",
@@ -72,15 +78,17 @@ export default async function StockDetailPage({
   const companyName = trending?.companyName ?? match?.companyName ?? ticker;
   const basePrice = trending?.basePrice ?? 100;
 
-  const [quote, series, consensus, profile, earnings, stats, news] = await Promise.all([
-    getQuote(ticker, companyName, basePrice),
-    getSeries(ticker, basePrice, 20),
-    getAnalystConsensus(ticker, basePrice),
-    getCompanyProfile(ticker, companyName),
-    getEarnings(ticker),
-    getKeyStatistics(ticker, basePrice),
-    getStockNews(ticker, companyName),
-  ]);
+  const [quote, series, consensus, profile, earnings, stats, news, returnFrequency] =
+    await Promise.all([
+      getQuote(ticker, companyName, basePrice),
+      getSeries(ticker, basePrice, 20),
+      getAnalystConsensus(ticker, basePrice),
+      getCompanyProfile(ticker, companyName),
+      getEarnings(ticker),
+      getKeyStatistics(ticker, basePrice),
+      getStockNews(ticker, companyName),
+      getHistoricalReturnFrequency(ticker, basePrice),
+    ]);
 
   const isPositive = quote.changePercent >= 0;
   const targetUpside = ((consensus.avgPriceTarget - quote.price) / quote.price) * 100;
@@ -139,6 +147,65 @@ export default async function StockDetailPage({
             <div key={tile.label}>
               <p className="text-xs text-muted">{tile.label}</p>
               <p className="mt-0.5 font-mono text-sm font-medium tabular-nums">{tile.value}</p>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
+      <Panel title="Return distribution (probability theory)" className="mt-4">
+        <p className="text-xs text-muted">
+          The empirical distribution of this stock&apos;s real rolling-window
+          returns across its available price history — mean, spread, and
+          percentiles of what actually happened. This describes the past
+          only; it is not a model of, or claim about, future odds.
+        </p>
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {returnFrequency.map((window) => (
+            <div key={window.label} className="rounded-md border border-panel-border p-3">
+              <p className="text-xs text-muted">{window.label}</p>
+              {window.positiveFrequency === null ? (
+                <p className="mt-2 font-mono text-sm text-muted">Not enough data</p>
+              ) : (
+                <>
+                  <p className="mt-0.5 font-mono text-2xl font-semibold tabular-nums">
+                    {(window.positiveFrequency * 100).toFixed(0)}%
+                  </p>
+                  <p className="text-xs text-muted">
+                    of {window.sampleCount} periods were positive
+                  </p>
+
+                  <div className="mt-3">
+                    <ReturnHistogram data={window.histogram} />
+                  </div>
+
+                  <dl className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+                    <dt className="text-muted">Mean</dt>
+                    <dd
+                      className={`text-right font-mono tabular-nums ${(window.mean ?? 0) >= 0 ? "text-positive" : "text-negative"}`}
+                    >
+                      {formatPct(window.mean)}
+                    </dd>
+                    <dt className="text-muted">Median</dt>
+                    <dd
+                      className={`text-right font-mono tabular-nums ${(window.median ?? 0) >= 0 ? "text-positive" : "text-negative"}`}
+                    >
+                      {formatPct(window.median)}
+                    </dd>
+                    <dt className="text-muted">Std. deviation</dt>
+                    <dd className="text-right font-mono tabular-nums text-muted">
+                      {window.stdDev === null ? "—" : `${(window.stdDev * 100).toFixed(1)}%`}
+                    </dd>
+                    <dt className="text-muted">10th–90th pct.</dt>
+                    <dd className="text-right font-mono tabular-nums text-muted">
+                      {formatPct(window.p10, 0)} to {formatPct(window.p90, 0)}
+                    </dd>
+                    <dt className="text-muted">Min / Max</dt>
+                    <dd className="text-right font-mono tabular-nums text-muted">
+                      {formatPct(window.min, 0)} / {formatPct(window.max, 0)}
+                    </dd>
+                  </dl>
+                </>
+              )}
             </div>
           ))}
         </div>

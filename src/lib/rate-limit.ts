@@ -62,6 +62,26 @@ export const generalLimiter = redis
     })
   : null;
 
+// Chat hits a paid, per-call LLM API (unlike the rest of the app, which is
+// flat-rate) — limited tighter and separately from generalLimiter so a
+// scripted loop against /api/chat can't run up real billing, and capped
+// again globally below so cost stays bounded even across many accounts.
+export const chatLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(20, "15 m"),
+      prefix: "ratelimit:chat",
+    })
+  : null;
+
+export const chatGlobalLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(1000, "1 d"),
+      prefix: "ratelimit:chat-global",
+    })
+  : null;
+
 // In-memory fallback for local dev without Upstash configured. Not safe
 // across multiple serverless instances — production must set
 // UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN.
@@ -94,4 +114,16 @@ export async function checkLoginLimit(key: string) {
 export async function checkGeneralLimit(key: string) {
   if (generalLimiter) return generalLimiter.limit(key);
   return memoryLimit(`general:${key}`, 80, FIFTEEN_MIN_MS);
+}
+
+export async function checkChatLimit(key: string) {
+  if (chatLimiter) return chatLimiter.limit(key);
+  return memoryLimit(`chat:${key}`, 20, FIFTEEN_MIN_MS);
+}
+
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+export async function checkChatGlobalLimit() {
+  if (chatGlobalLimiter) return chatGlobalLimiter.limit("global");
+  return memoryLimit("chat-global", 1000, ONE_DAY_MS);
 }

@@ -129,3 +129,61 @@ export async function getSeries(
   const real = await twelveDataSeries(symbol, points);
   return real ?? mockSeries(basePrice, symbol, points);
 }
+
+export type OhlcPoint = { date: string; open: number; high: number; low: number; close: number };
+
+async function twelveDataOhlc(symbol: string, points = 30): Promise<OhlcPoint[] | null> {
+  const apiKey = process.env.TWELVE_DATA_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const res = await fetch(
+      `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=1day&outputsize=${points}&apikey=${apiKey}`,
+      { next: { revalidate: CACHE_SECONDS } },
+    );
+    const data = await res.json();
+    if (data.code || !Array.isArray(data.values)) return null;
+
+    return data.values
+      .map((v: { datetime: string; open: string; high: string; low: string; close: string }) => ({
+        date: v.datetime,
+        open: parseFloat(v.open),
+        high: parseFloat(v.high),
+        low: parseFloat(v.low),
+        close: parseFloat(v.close),
+      }))
+      .reverse();
+  } catch {
+    return null;
+  }
+}
+
+// Synthesizes plausible OHLC bars from the same close-price walk used
+// elsewhere for mock data, so the mock fallback looks like real candles
+// instead of a flat line — open/high/low are derived from that day's and
+// the prior day's close, not independently random.
+function mockOhlc(basePrice: number, seedKey: string, points = 30): OhlcPoint[] {
+  const closes = mockSeries(basePrice, seedKey, points);
+  return closes.map((point, i) => {
+    const prevClose = closes[i - 1]?.value ?? point.value;
+    const open = prevClose;
+    const rangeSeed = seededRandom(`${seedKey}:range:${point.date}`);
+    const wick = Math.abs(point.value - open) * (0.3 + rangeSeed * 0.7) + point.value * 0.002;
+    return {
+      date: point.date,
+      open,
+      close: point.value,
+      high: Math.max(open, point.value) + wick,
+      low: Math.min(open, point.value) - wick,
+    };
+  });
+}
+
+export async function getOhlcSeries(
+  symbol: string,
+  basePrice: number,
+  points = 30,
+): Promise<OhlcPoint[]> {
+  const real = await twelveDataOhlc(symbol, points);
+  return real ?? mockOhlc(basePrice, symbol, points);
+}

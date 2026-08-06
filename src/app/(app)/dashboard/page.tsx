@@ -1,8 +1,9 @@
 import { requireActiveSubscription } from "@/lib/subscription-guard";
-import { CURRENCY_PAIRS, COMMODITIES, getQuote } from "@/lib/market-data";
+import { CURRENCY_PAIRS, COMMODITIES, getQuote, getSeries } from "@/lib/market-data";
 import { getEconomicEvents } from "@/lib/economic-calendar";
 import { Panel } from "@/components/Panel";
 import { StatNumber } from "@/components/StatNumber";
+import { Sparkline } from "@/components/Sparkline";
 import { EconomicCalendar } from "@/components/EconomicCalendar";
 import { Disclaimer } from "@/components/Disclaimer";
 
@@ -24,6 +25,13 @@ export default async function DashboardPage() {
     getEconomicEvents(),
   ]);
 
+  const currencySeries = await Promise.all(
+    CURRENCY_PAIRS.map((pair) => getSeries(pair.symbol, pair.basePrice, 21)),
+  );
+  const commoditySeries = await Promise.all(
+    COMMODITIES.map((c) => getSeries(c.symbol, c.basePrice, 21)),
+  );
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
       <div className="flex items-baseline justify-between">
@@ -31,23 +39,29 @@ export default async function DashboardPage() {
         <p className="text-xs text-muted">Refreshed on an interval, not live-polled per request.</p>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-[repeat(7,minmax(0,1fr))]">
-        {currencyQuotes.map((quote) => (
+      <div className="stagger-children mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-[repeat(7,minmax(0,1fr))]">
+        {currencyQuotes.map((quote, i) => (
           <Panel key={quote.symbol} title={quote.symbol}>
             <StatNumber
               label={`USD vs ${quote.label}`}
               value={quote.price.toFixed(3)}
               delta={formatDelta(quote.changePercent)}
             />
+            <div className="mt-3 -mb-1">
+              <Sparkline data={currencySeries[i]} positive={quote.changePercent >= 0} />
+            </div>
           </Panel>
         ))}
-        {commodityQuotes.map((quote) => (
+        {commodityQuotes.map((quote, i) => (
           <Panel key={quote.symbol} title={quote.label}>
             <StatNumber
               label={quote.symbol}
               value={`$${quote.price.toFixed(2)}`}
               delta={formatDelta(quote.changePercent)}
             />
+            <div className="mt-3 -mb-1">
+              <Sparkline data={commoditySeries[i]} positive={quote.changePercent >= 0} />
+            </div>
           </Panel>
         ))}
       </div>
@@ -58,11 +72,11 @@ export default async function DashboardPage() {
           High-impact events, forecast vs. actual — mock data, real ingestion is a planned follow-up.
         </p>
       </div>
-      <Panel className="mt-3">
+      <Panel className="animate-rise-in mt-3">
         <EconomicCalendar events={economicEvents} />
       </Panel>
 
-      <div className="mt-6">
+      <div className="animate-rise-in mt-6">
         <Disclaimer />
       </div>
     </div>

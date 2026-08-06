@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
-/* Redesigned palette: warm near-black + bull-market gold accent, replacing
-   the earlier cool indigo/slate system per explicit product-owner request.
-   Semantic green/red (gain/loss) stay unchanged — gold is reserved for
-   brand/interactive elements only, never decoration, so it never collides
-   with the gain/loss vocabulary. */
+/* Redesigned palette: deep blue-black + electric-blue accent, replacing the
+   earlier warm gold system per explicit product-owner reference (a clean,
+   glassy blue fintech mockup). Semantic green/red (gain/loss) stay
+   unchanged — blue is reserved for brand/interactive elements only, never
+   decoration, so it never collides with the gain/loss vocabulary. */
 :root {
-  --background: #0a0908;
-  --panel: #16130f;
-  --panel-border: #3a332a;
-  --foreground: #f5f3ef;
-  --muted: #a89f8f;
-  --accent: #f0b429;
+  --background: #050914;
+  --panel: #0d1526;
+  --panel-border: #1e2c4a;
+  --foreground: #f2f5fb;
+  --muted: #8492b3;
+  --accent: #4d8dff;
   --positive: #22c55e;
   --negative: #ef4444;
 }
@@ -72,3 +72,33 @@ body {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise-in {
+  animation: rise-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Staggered entrance for grids of cards — each child fades/rises in
+   slightly after the previous one, capped so long lists don't take
+   forever to finish appearing. */
+.stagger-children > * {
+  animation: rise-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 40ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 80ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 160ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 240ms; }
+.stagger-children > *:nth-child(n + 8) { animation-delay: 280ms; }

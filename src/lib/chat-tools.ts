@@ -1,4 +1,3 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { getQuote, CURRENCY_PAIRS, COMMODITIES } from "@/lib/market-data";
 import {
   getAnalystConsensus,
@@ -18,12 +17,25 @@ import { getEconomicEvents } from "@/lib/economic-calendar";
 // economic calendar). The bot answers from this data — it never generates
 // its own buy/sell call or a forward-looking prediction (same hard
 // constraint as the rest of the app, see PRODUCT.md Product Principle #1).
-export const CHAT_TOOLS: Anthropic.Tool[] = [
+// Plain JSON-schema tool defs, provider-agnostic (converted to each
+// provider's expected shape — OpenAI/Groq function-calling format, or
+// Anthropic tool-use format — at the call site in the API route).
+export type ChatToolDef = {
+  name: string;
+  description: string;
+  parameters: {
+    type: "object";
+    properties: Record<string, { type: string; description?: string }>;
+    required?: string[];
+  };
+};
+
+export const CHAT_TOOLS: ChatToolDef[] = [
   {
     name: "get_stock_overview",
     description:
       "Get a stock's current quote, real third-party analyst consensus (buy/hold/sell counts and average price target), company profile, key statistics (market cap, P/E, margins, etc.), and recent quarterly earnings. Use for any question about a specific ticker or company.",
-    input_schema: {
+    parameters: {
       type: "object",
       properties: {
         ticker: { type: "string", description: "Stock ticker symbol, e.g. AAPL" },
@@ -34,7 +46,7 @@ export const CHAT_TOOLS: Anthropic.Tool[] = [
   {
     name: "get_stock_news",
     description: "Get recent news headlines for a specific stock ticker.",
-    input_schema: {
+    parameters: {
       type: "object",
       properties: {
         ticker: { type: "string", description: "Stock ticker symbol, e.g. AAPL" },
@@ -46,7 +58,7 @@ export const CHAT_TOOLS: Anthropic.Tool[] = [
     name: "get_stock_historical_frequency",
     description:
       "Get how often a stock's price was higher after 1/3/6/12-month rolling windows across its real historical price data. This is a backward-looking historical frequency, not a forecast.",
-    input_schema: {
+    parameters: {
       type: "object",
       properties: {
         ticker: { type: "string", description: "Stock ticker symbol, e.g. AAPL" },
@@ -57,7 +69,7 @@ export const CHAT_TOOLS: Anthropic.Tool[] = [
   {
     name: "search_stocks",
     description: "Search for stocks by company name or ticker to find the correct ticker symbol.",
-    input_schema: {
+    parameters: {
       type: "object",
       properties: {
         query: { type: "string", description: "Company name or partial ticker" },
@@ -69,18 +81,18 @@ export const CHAT_TOOLS: Anthropic.Tool[] = [
     name: "get_market_dashboard",
     description:
       "Get current USD currency pair rates (EUR/USD, USD/JPY, GBP/USD, USD/CNY) and commodity prices (gold, oil, silver).",
-    input_schema: { type: "object", properties: {} },
+    parameters: { type: "object", properties: {} },
   },
   {
     name: "get_economic_calendar",
     description: "Get upcoming and recent economic calendar events (e.g. CPI, Fed rate decisions, jobs reports).",
-    input_schema: { type: "object", properties: {} },
+    parameters: { type: "object", properties: {} },
   },
   {
     name: "get_politician_trades",
     description:
       "Get recent congressional stock trade disclosures overall, or for one named politician, plus that politician's estimated portfolio by ticker if a name is given.",
-    input_schema: {
+    parameters: {
       type: "object",
       properties: {
         politicianName: {
@@ -93,7 +105,7 @@ export const CHAT_TOOLS: Anthropic.Tool[] = [
   {
     name: "get_most_bought_this_month",
     description: "Get the tickers most bought by politicians (by disclosed filing count) this month.",
-    input_schema: { type: "object", properties: {} },
+    parameters: { type: "object", properties: {} },
   },
 ];
 

@@ -45,6 +45,11 @@ export default function Home() {
   return (
     <div>
       <div className="relative overflow-hidden">
+        <div
+          className="pointer-events-none absolute top-0 right-0 h-[420px] w-[420px] rounded-full opacity-40 blur-3xl"
+          style={{ background: "radial-gradient(circle, var(--accent) 0%, transparent 70%)" }}
+          aria-hidden="true"
+        />
         <MarketSkyline />
         <div className="relative mx-auto max-w-6xl px-6 pt-14 pb-4">
           <div className="max-w-2xl">
@@ -59,13 +64,13 @@ export default function Home() {
             <div className="mt-8 flex gap-3">
               <Link
                 href="/pricing"
-                className="rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
+                className="rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
               >
                 View pricing
               </Link>
               <Link
                 href="/signup"
-                className="rounded-md border border-panel-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-panel"
+                className="rounded-full border border-panel-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-panel"
               >
                 Create account
               </Link>

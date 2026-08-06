@@ -16,6 +16,7 @@ export function ReturnHistogram({ data }: { data: HistogramBucket[] }) {
             fontSize: 11,
           }}
           labelFormatter={() => ""}
+          itemStyle={{ color: "var(--foreground)" }}
           formatter={(value, _name, item) => [
             `${((value as number) * 100).toFixed(0)}% of periods`,
             item.payload.rangeLabel,

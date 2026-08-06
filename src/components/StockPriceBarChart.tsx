@@ -23,6 +23,7 @@ export function StockPriceBarChart({ data }: { data: SeriesPoint[] }) {
             fontSize: 12,
           }}
           labelStyle={{ color: "var(--muted)" }}
+          itemStyle={{ color: "var(--foreground)" }}
           formatter={(value) => (typeof value === "number" ? `$${value.toFixed(2)}` : value)}
         />
         <Bar dataKey="value" fill="var(--accent)" radius={[3, 3, 0, 0]} />

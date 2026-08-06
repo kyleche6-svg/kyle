@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import Groq from "groq-sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -15,6 +15,16 @@ Hard rules, no exceptions:
 - Keep answers concise and end with a short reminder that this is informational, not financial advice, whenever you discuss a specific security.`;
 
 const MAX_TOOL_ROUNDS = 4;
+const MODEL = "llama-3.3-70b-versatile";
+
+const GROQ_TOOLS: Groq.Chat.Completions.ChatCompletionTool[] = CHAT_TOOLS.map((tool) => ({
+  type: "function",
+  function: {
+    name: tool.name,
+    description: tool.description,
+    parameters: tool.parameters,
+  },
+}));
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -44,10 +54,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "The chat assistant isn't configured yet. Set ANTHROPIC_API_KEY to enable it." },
+      { error: "The chat assistant isn't configured yet. Set GROQ_API_KEY to enable it." },
       { status: 503 },
     );
   }
@@ -71,54 +81,50 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const client = new Anthropic({ apiKey });
-  const conversation: Anthropic.MessageParam[] = messages.map((m: { role: "user" | "assistant"; content: string }) => ({
-    role: m.role,
-    content: m.content,
-  }));
+  const client = new Groq({ apiKey });
+  const conversation: Groq.Chat.Completions.ChatCompletionMessageParam[] = [
+    { role: "system", content: SYSTEM_PROMPT },
+    ...messages.map((m: { role: "user" | "assistant"; content: string }) => ({
+      role: m.role,
+      content: m.content,
+    })),
+  ];
 
   try {
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-      const response = await client.messages.create({
-        model: "claude-sonnet-5",
+      const response = await client.chat.completions.create({
+        model: MODEL,
         max_tokens: 512,
-        system: SYSTEM_PROMPT,
-        tools: CHAT_TOOLS,
         messages: conversation,
+        tools: GROQ_TOOLS,
       });
 
-      const toolUseBlocks = response.content.filter(
-        (block): block is Anthropic.ToolUseBlock => block.type === "tool_use",
-      );
-
-      if (toolUseBlocks.length === 0) {
-        const text = response.content
-          .filter((block): block is Anthropic.TextBlock => block.type === "text")
-          .map((block) => block.text)
-          .join("\n")
-          .trim();
-        return NextResponse.json({ reply: text || "I don't have an answer for that right now." });
+      const choice = response.choices[0]?.message;
+      if (!choice) {
+        return NextResponse.json({ reply: "I don't have an answer for that right now." });
       }
 
-      conversation.push({ role: "assistant", content: response.content });
+      const toolCalls = choice.tool_calls ?? [];
+      if (toolCalls.length === 0) {
+        return NextResponse.json({ reply: choice.content?.trim() || "I don't have an answer for that right now." });
+      }
 
-      const toolResults = await Promise.all(
-        toolUseBlocks.map(async (block) => {
-          let result: unknown;
-          try {
-            result = await executeChatTool(block.name, block.input as Record<string, unknown>);
-          } catch {
-            result = { error: "Failed to fetch that data." };
-          }
-          return {
-            type: "tool_result" as const,
-            tool_use_id: block.id,
-            content: JSON.stringify(result),
-          };
-        }),
-      );
+      conversation.push({ role: "assistant", content: choice.content ?? "", tool_calls: toolCalls });
 
-      conversation.push({ role: "user", content: toolResults });
+      for (const call of toolCalls) {
+        let result: unknown;
+        try {
+          const input = JSON.parse(call.function.arguments || "{}");
+          result = await executeChatTool(call.function.name, input);
+        } catch {
+          result = { error: "Failed to fetch that data." };
+        }
+        conversation.push({
+          role: "tool",
+          tool_call_id: call.id,
+          content: JSON.stringify(result),
+        });
+      }
     }
 
     return NextResponse.json({ reply: "That took more steps than I could complete — try a more specific question." });

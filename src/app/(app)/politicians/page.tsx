@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { TrendUp, TrendDown } from "@phosphor-icons/react/dist/ssr";
+import { TrendUp, TrendDown, Users } from "@phosphor-icons/react/dist/ssr";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
-import { getRecentTrades, getMonthlyBuyLeaderboard } from "@/lib/trades";
+import { getRecentRealTrades, getRealMonthlyBuyLeaderboard, getAllRealPoliticians } from "@/lib/real-trades";
 import { Panel } from "@/components/Panel";
 import { Disclaimer } from "@/components/Disclaimer";
 
@@ -21,17 +21,21 @@ function formatDate(date: Date) {
 export default async function PoliticiansPage() {
   await requireActiveSubscription();
 
-  const [trades, leaderboard] = await Promise.all([
-    getRecentTrades(),
-    getMonthlyBuyLeaderboard(),
+  const [trades, leaderboard, allPoliticians] = await Promise.all([
+    getRecentRealTrades(75),
+    getRealMonthlyBuyLeaderboard(),
+    getAllRealPoliticians(),
   ]);
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      <h1 className="text-2xl font-semibold">Politician Trading Tracker</h1>
+      <h1 className="text-2xl font-semibold">Senate Trading Tracker</h1>
       <p className="mt-1 text-sm text-muted">
-        Public congressional stock trade disclosures. Mock data — real
-        ingestion from Senate eFD filings is a planned follow-up.
+        Real stock-trade disclosures filed by US Senators under the STOCK
+        Act, sourced from efdsearch.senate.gov. Senate only — no reliable
+        free House disclosure feed was available. Filed date is approximated
+        as the transaction date; the underlying dataset doesn&apos;t report a
+        separate filing date.
       </p>
 
       <Panel title="Most bought this month" className="mt-6">
@@ -50,6 +54,24 @@ export default async function PoliticiansPage() {
         )}
       </Panel>
 
+      <Panel title={`All politicians (${allPoliticians.length})`} className="mt-4">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {allPoliticians.map((politician) => (
+            <Link
+              key={politician.name}
+              href={`/politicians/${encodeURIComponent(politician.name)}`}
+              className="flex items-center justify-between rounded-md border border-panel-border px-3 py-2 text-sm transition-colors hover:border-accent hover:text-accent"
+            >
+              <span className="flex items-center gap-2">
+                <Users size={14} className="text-muted" />
+                {politician.name}
+              </span>
+              <span className="font-mono text-xs text-muted">{politician.tradeCount} trades</span>
+            </Link>
+          ))}
+        </div>
+      </Panel>
+
       <Panel title="Recent filings" className="mt-4">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -60,7 +82,7 @@ export default async function PoliticiansPage() {
                 <th className="pb-2 pr-4 font-normal">Direction</th>
                 <th className="pb-2 pr-4 font-normal">Amount range</th>
                 <th className="pb-2 pr-4 font-normal">Transaction date</th>
-                <th className="pb-2 font-normal">Filed date</th>
+                <th className="pb-2 font-normal">Source</th>
               </tr>
             </thead>
             <tbody>
@@ -97,7 +119,16 @@ export default async function PoliticiansPage() {
                     <td className="py-2 pr-4 text-muted">
                       {formatDate(trade.transactionDate)}
                     </td>
-                    <td className="py-2 text-muted">{formatDate(trade.filedDate)}</td>
+                    <td className="py-2">
+                      <a
+                        href={trade.ptrLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-accent hover:underline"
+                      >
+                        View PTR
+                      </a>
+                    </td>
                   </tr>
                 );
               })}

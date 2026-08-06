@@ -6,6 +6,7 @@ import {
   Tag,
   UserCircle,
   TrendUp,
+  Trophy,
 } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/lib/auth";
 import { Logo } from "@/components/Logo";
@@ -13,6 +14,7 @@ import { Logo } from "@/components/Logo";
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: ChartLine },
   { href: "/stocks", label: "Stocks", icon: TrendUp },
+  { href: "/top-traders", label: "Top Traders", icon: Trophy },
   { href: "/politicians", label: "Politicians", icon: Bank },
   { href: "/tweets", label: "Tweets", icon: ChatCircleText },
   { href: "/pricing", label: "Pricing", icon: Tag },

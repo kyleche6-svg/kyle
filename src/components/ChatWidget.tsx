@@ -123,7 +123,7 @@ export function ChatWidget() {
               type="submit"
               disabled={loading || !input.trim()}
               aria-label="Send"
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent text-background transition-opacity disabled:opacity-40"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-background transition-opacity disabled:opacity-40"
             >
               <PaperPlaneTilt size={16} weight="fill" />
             </button>

@@ -1,0 +1,102 @@
+import { Buildings, Sparkle } from "@phosphor-icons/react/dist/ssr";
+import { requireActiveSubscription } from "@/lib/subscription-guard";
+import { getTopTraderPortfolios } from "@/lib/institutional-holdings";
+import { getSpeculativeContext } from "@/lib/holdings-context";
+import { Panel } from "@/components/Panel";
+import { Disclaimer } from "@/components/Disclaimer";
+
+function formatCompact(value: number) {
+  if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+  if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
+  return `$${value.toLocaleString()}`;
+}
+
+function formatFilingDate(iso: string | null) {
+  if (!iso) return "No 13F-HR on file";
+  return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+}
+
+export default async function TopTradersPage() {
+  await requireActiveSubscription();
+
+  const funds = await getTopTraderPortfolios();
+  const contextByFund = await Promise.all(funds.map((fund) => getSpeculativeContext(fund)));
+
+  return (
+    <div className="mx-auto max-w-6xl px-6 py-8">
+      <h1 className="text-2xl font-semibold">Top Traders</h1>
+      <p className="mt-1 max-w-3xl text-sm text-muted">
+        Real institutional holdings from SEC Form 13F filings — what large
+        investment managers ($100M+ AUM) publicly disclosed holding as of
+        their most recent quarterly filing. The SEC gives filers up to 45
+        days after quarter-end to file, so this reflects each fund&apos;s
+        position as of that filing date, not today&apos;s live portfolio —
+        there is no faster public data for this.
+      </p>
+      <p className="mt-2 flex items-start gap-2 rounded-md border border-panel-border bg-panel px-3 py-2 text-xs text-muted">
+        <Sparkle size={14} className="mt-0.5 shrink-0 text-accent" />
+        <span>
+          The &ldquo;possible context&rdquo; notes are AI-generated speculation from general
+          market knowledge — 13F filings never state a reason. They are not the
+          fund&apos;s own explanation and not investment advice.
+        </span>
+      </p>
+
+      <div className="stagger-children mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {funds.map((fund, i) => {
+          const notes = contextByFund[i];
+          return (
+            <Panel key={fund.cik}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-2.5">
+                  <Buildings size={22} weight="light" className="mt-0.5 text-accent" />
+                  <div>
+                    <p className="text-sm font-semibold">{fund.name}</p>
+                    <p className="text-xs text-muted">{fund.manager}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted">13F value</p>
+                  <p className="font-mono text-sm font-medium tabular-nums">
+                    {fund.totalValueUsd > 0 ? formatCompact(fund.totalValueUsd) : "—"}
+                  </p>
+                </div>
+              </div>
+              <p className="mt-1 text-[11px] text-muted">Filed {formatFilingDate(fund.filingDate)}</p>
+
+              {fund.holdings.length === 0 ? (
+                <p className="mt-4 text-sm text-muted">No holdings data available for this filer.</p>
+              ) : (
+                <div className="mt-4 flex flex-col gap-3 border-t border-panel-border pt-3">
+                  {fund.holdings.slice(0, 5).map((holding) => {
+                    const note = notes.find((n) => n.issuer === holding.issuer)?.note;
+                    return (
+                      <div key={holding.cusip}>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-medium">{holding.issuer}</span>
+                          <span className="font-mono text-xs tabular-nums text-muted">
+                            {formatCompact(holding.valueUsd)} · {(holding.weight * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                        {note && (
+                          <p className="mt-0.5 flex items-start gap-1.5 text-xs text-muted">
+                            <Sparkle size={11} className="mt-0.5 shrink-0 text-accent" />
+                            {note}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </Panel>
+          );
+        })}
+      </div>
+
+      <div className="mt-6">
+        <Disclaimer />
+      </div>
+    </div>
+  );
+}

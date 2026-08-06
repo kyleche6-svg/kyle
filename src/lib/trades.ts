@@ -47,6 +47,16 @@ export async function getPoliticianPortfolio(politicianName: string) {
     .sort((a, b) => Math.abs(b.netEstimate) - Math.abs(a.netEstimate));
 }
 
+export async function getAllPoliticians() {
+  const grouped = await prisma.trade.groupBy({
+    by: ["politicianName"],
+    _count: { politicianName: true },
+    orderBy: { politicianName: "asc" },
+  });
+
+  return grouped.map((row) => ({ name: row.politicianName, tradeCount: row._count.politicianName }));
+}
+
 export async function getMonthlyBuyLeaderboard(limit = 10) {
   const startOfMonth = new Date();
   startOfMonth.setDate(1);

@@ -55,7 +55,7 @@ export default async function AccountPage() {
           ) : (
             <Link
               href="/pricing"
-              className="inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
+              className="inline-block rounded-full bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
             >
               View plans
             </Link>

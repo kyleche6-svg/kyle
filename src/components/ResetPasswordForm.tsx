@@ -30,7 +30,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {pending ? "Resetting…" : "Reset password"}
         </button>

@@ -6,6 +6,8 @@ import { searchStocks } from "@/lib/stock-search";
 import { getQuote } from "@/lib/market-data";
 import { getAnalystConsensus } from "@/lib/stocks";
 import { Panel } from "@/components/Panel";
+import { GainersPodium } from "@/components/GainersPodium";
+import { BearSkyline } from "@/components/BearSkyline";
 import { Disclaimer } from "@/components/Disclaimer";
 
 const CONSENSUS_LABELS: Record<string, string> = {
@@ -55,7 +57,7 @@ export default async function StocksPage({
 
   const movers = !query
     ? {
-        gainers: [...stocks].sort((a, b) => b.quote.changePercent - a.quote.changePercent).slice(0, 4),
+        gainers: [...stocks].sort((a, b) => b.quote.changePercent - a.quote.changePercent).slice(0, 6),
         losers: [...stocks].sort((a, b) => a.quote.changePercent - b.quote.changePercent).slice(0, 4),
       }
     : null;
@@ -86,10 +88,13 @@ export default async function StocksPage({
       </form>
 
       {movers && (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="stagger-children mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Panel title="Top gainers">
-            <div className="flex flex-col gap-2.5">
-              {movers.gainers.map((stock) => (
+            <GainersPodium
+              stocks={movers.gainers.map((s) => ({ ticker: s.ticker, changePercent: s.quote.changePercent }))}
+            />
+            <div className="mt-4 flex flex-col gap-2.5 border-t border-panel-border pt-3">
+              {movers.gainers.slice(3).map((stock) => (
                 <Link
                   key={stock.ticker}
                   href={`/stocks/${stock.ticker}`}
@@ -104,8 +109,10 @@ export default async function StocksPage({
               ))}
             </div>
           </Panel>
-          <Panel title="Top losers">
-            <div className="flex flex-col gap-2.5">
+          <Panel className="relative overflow-hidden">
+            <BearSkyline />
+            <div className="relative flex flex-col gap-2.5">
+              <h2 className="mb-1 text-sm font-medium text-muted">Top losers</h2>
               {movers.losers.map((stock) => (
                 <Link
                   key={stock.ticker}

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowSquareOut, TrendUp, TrendDown, Minus, Buildings, Users } from "@phosphor-icons/react/dist/ssr";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
-import { getQuote, getSeries } from "@/lib/market-data";
+import { getQuote, getSeries, getOhlcSeries } from "@/lib/market-data";
 import {
   getAnalystConsensus,
   getCompanyProfile,
@@ -15,7 +15,7 @@ import { searchStocks } from "@/lib/stock-search";
 import { getHistoricalReturnFrequency } from "@/lib/historical-stats";
 import { Panel } from "@/components/Panel";
 import { StatNumber } from "@/components/StatNumber";
-import { StockPriceBarChart } from "@/components/StockPriceBarChart";
+import { PriceChartToggle } from "@/components/PriceChartToggle";
 import { ReturnHistogram } from "@/components/ReturnHistogram";
 import { Disclaimer } from "@/components/Disclaimer";
 
@@ -78,10 +78,11 @@ export default async function StockDetailPage({
   const companyName = trending?.companyName ?? match?.companyName ?? ticker;
   const basePrice = trending?.basePrice ?? 100;
 
-  const [quote, series, consensus, profile, earnings, stats, news, returnFrequency] =
+  const [quote, series, ohlc, consensus, profile, earnings, stats, news, returnFrequency] =
     await Promise.all([
       getQuote(ticker, companyName, basePrice),
       getSeries(ticker, basePrice, 20),
+      getOhlcSeries(ticker, basePrice, 20),
       getAnalystConsensus(ticker, basePrice),
       getCompanyProfile(ticker, companyName),
       getEarnings(ticker),
@@ -138,7 +139,7 @@ export default async function StockDetailPage({
       </div>
 
       <Panel className="mt-4">
-        <StockPriceBarChart data={series} />
+        <PriceChartToggle series={series} ohlc={ohlc} />
       </Panel>
 
       <Panel title="Key statistics" className="mt-4">
@@ -153,24 +154,26 @@ export default async function StockDetailPage({
       </Panel>
 
       <Panel title="Return distribution (probability theory)" className="mt-4">
-        <p className="text-xs text-muted">
+        <p className="text-xs text-foreground">
           The empirical distribution of this stock&apos;s real rolling-window
           returns across its available price history — mean, spread, and
-          percentiles of what actually happened. This describes the past
-          only; it is not a model of, or claim about, future odds.
+          percentiles of what actually happened. The implied price range
+          below is today&apos;s price stretched by that same historical
+          spread, purely arithmetic on past data. None of this is a model
+          of, or claim about, future odds — it describes the past only.
         </p>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {returnFrequency.map((window) => (
             <div key={window.label} className="rounded-md border border-panel-border p-3">
-              <p className="text-xs text-muted">{window.label}</p>
+              <p className="text-xs text-foreground">{window.label}</p>
               {window.positiveFrequency === null ? (
-                <p className="mt-2 font-mono text-sm text-muted">Not enough data</p>
+                <p className="mt-2 font-mono text-sm text-foreground">Not enough data</p>
               ) : (
                 <>
                   <p className="mt-0.5 font-mono text-2xl font-semibold tabular-nums">
                     {(window.positiveFrequency * 100).toFixed(0)}%
                   </p>
-                  <p className="text-xs text-muted">
+                  <p className="text-xs text-foreground">
                     of {window.sampleCount} periods were positive
                   </p>
 
@@ -179,31 +182,43 @@ export default async function StockDetailPage({
                   </div>
 
                   <dl className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
-                    <dt className="text-muted">Mean</dt>
+                    <dt className="text-foreground">Mean</dt>
                     <dd
                       className={`text-right font-mono tabular-nums ${(window.mean ?? 0) >= 0 ? "text-positive" : "text-negative"}`}
                     >
                       {formatPct(window.mean)}
                     </dd>
-                    <dt className="text-muted">Median</dt>
+                    <dt className="text-foreground">Median</dt>
                     <dd
                       className={`text-right font-mono tabular-nums ${(window.median ?? 0) >= 0 ? "text-positive" : "text-negative"}`}
                     >
                       {formatPct(window.median)}
                     </dd>
-                    <dt className="text-muted">Std. deviation</dt>
-                    <dd className="text-right font-mono tabular-nums text-muted">
+                    <dt className="text-foreground">Std. deviation</dt>
+                    <dd className="text-right font-mono tabular-nums text-foreground">
                       {window.stdDev === null ? "—" : `${(window.stdDev * 100).toFixed(1)}%`}
                     </dd>
-                    <dt className="text-muted">10th–90th pct.</dt>
-                    <dd className="text-right font-mono tabular-nums text-muted">
+                    <dt className="text-foreground">10th–90th pct.</dt>
+                    <dd className="text-right font-mono tabular-nums text-foreground">
                       {formatPct(window.p10, 0)} to {formatPct(window.p90, 0)}
                     </dd>
-                    <dt className="text-muted">Min / Max</dt>
-                    <dd className="text-right font-mono tabular-nums text-muted">
+                    <dt className="text-foreground">Min / Max</dt>
+                    <dd className="text-right font-mono tabular-nums text-foreground">
                       {formatPct(window.min, 0)} / {formatPct(window.max, 0)}
                     </dd>
                   </dl>
+
+                  {window.p10 !== null && window.p90 !== null && (
+                    <div className="mt-3 border-t border-panel-border pt-3">
+                      <p className="text-[11px] text-muted">
+                        Implied price range (10th–90th pct. of history)
+                      </p>
+                      <p className="mt-0.5 font-mono text-sm font-medium tabular-nums">
+                        ${(quote.price * (1 + window.p10)).toFixed(2)} – $
+                        {(quote.price * (1 + window.p90)).toFixed(2)}
+                      </p>
+                    </div>
+                  )}
                 </>
               )}
             </div>

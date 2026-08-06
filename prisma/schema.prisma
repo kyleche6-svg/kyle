@@ -127,9 +127,15 @@ model Trade {
   amountRangeHigh Int
   filedDate       DateTime
   transactionDate DateTime
+  // Stable natural key from the source filing (efdsearch.senate.gov PTR UUID
+  // + row index) — makes re-running the scraper idempotent instead of
+  // duplicating rows on every run.
+  externalId      String?        @unique
+  ptrLink         String?
 
   @@index([ticker])
   @@index([filedDate])
+  @@index([politicianName])
 }
 
 enum EventImpact {

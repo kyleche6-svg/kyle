@@ -32,10 +32,12 @@ export default async function PoliticiansPage() {
       <h1 className="text-2xl font-semibold">Senate Trading Tracker</h1>
       <p className="mt-1 text-sm text-muted">
         Real stock-trade disclosures filed by US Senators under the STOCK
-        Act, sourced from efdsearch.senate.gov. Senate only — no reliable
-        free House disclosure feed was available. Filed date is approximated
-        as the transaction date; the underlying dataset doesn&apos;t report a
-        separate filing date.
+        Act, scraped directly from efdsearch.senate.gov — the Senate&apos;s own
+        live disclosure search system, not a stale third-party mirror. Senate
+        only — no reliable free House disclosure feed exists. The STOCK Act
+        gives filers up to 45 days to disclose a trade, so a filing here is
+        current as of that legal window, not real-time. Data reflects the
+        last scrape run, not a live feed.
       </p>
 
       <Panel title="Most bought this month" className="mt-6">

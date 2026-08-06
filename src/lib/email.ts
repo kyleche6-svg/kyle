@@ -33,3 +33,31 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
     `,
   });
 }
+
+export async function sendVerificationEmail(email: string, verifyUrl: string) {
+  const apiKey = process.env.RESEND_API_KEY;
+
+  if (!apiKey) {
+    console.warn(
+      JSON.stringify({
+        event: "verification_email_not_configured",
+        message: "RESEND_API_KEY not set — logging verification link instead of emailing it",
+        email,
+        verifyUrl,
+      }),
+    );
+    return;
+  }
+
+  const resend = new Resend(apiKey);
+  await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL || "DollarWatch <onboarding@resend.dev>",
+    to: email,
+    subject: "Verify your DollarWatch email",
+    html: `
+      <p>Welcome to DollarWatch — confirm this is your email address to finish setting up your account.</p>
+      <p><a href="${verifyUrl}">Click here to verify your email</a> (expires in 24 hours).</p>
+      <p>If you didn't create a DollarWatch account, you can safely ignore this email.</p>
+    `,
+  });
+}

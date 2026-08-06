@@ -9,6 +9,8 @@ import { stripe } from "@/lib/stripe";
 import { SignupFormSchema, type SignupFormState } from "@/lib/definitions";
 import { checkGeneralLimit, checkLoginLimit, getRequestIp } from "@/lib/rate-limit";
 import { verifyTurnstile } from "@/lib/turnstile";
+import { sendVerificationLink } from "@/app/actions/email-verification";
+import { issueTwoFactorChallenge } from "@/app/actions/two-factor";
 
 function logRateLimitViolation(details: Record<string, string>) {
   console.warn(JSON.stringify({ event: "rate_limit_violation", ...details }));
@@ -52,17 +54,19 @@ export async function signup(_state: SignupFormState, formData: FormData) {
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  await prisma.user.create({ data: { email, passwordHash } });
+  const user = await prisma.user.create({ data: { email, passwordHash } });
+  await sendVerificationLink(user.id, user.email);
 
   await signIn("credentials", { email, password, redirect: false });
   redirect("/pricing");
 }
 
-export type LoginFormState = { message?: string } | undefined;
+export type LoginFormState = { message?: string; requiresTwoFactor?: boolean } | undefined;
 
 export async function login(_state: LoginFormState, formData: FormData) {
   const ip = await getRequestIp();
   const email = String(formData.get("email") ?? "unknown");
+  const password = String(formData.get("password") ?? "");
 
   const { success } = await checkLoginLimit(`${ip}:${email}`);
   if (!success) {
@@ -76,6 +80,20 @@ export async function login(_state: LoginFormState, formData: FormData) {
   );
   if (!turnstileOk) {
     return { message: "Bot verification failed. Please try again." };
+  }
+
+  // Checked here (server-side, before any session is established) rather
+  // than relying on the credentials provider alone — that lets a 2FA-enabled
+  // account be routed into the code-entry step instead of getting a session
+  // immediately on password alone.
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (user?.twoFactorEnabled) {
+    const passwordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!passwordValid) {
+      return { message: "Invalid email or password." };
+    }
+    await issueTwoFactorChallenge(user.id);
+    return { requiresTwoFactor: true };
   }
 
   try {

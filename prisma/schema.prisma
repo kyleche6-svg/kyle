@@ -10,17 +10,48 @@ datasource db {
 }
 
 model User {
-  id                  String               @id @default(cuid())
-  email               String               @unique
-  passwordHash        String
-  name                String?
-  phone               String?
-  createdAt           DateTime             @default(now())
-  subscription        Subscription?
-  passwordResetTokens PasswordResetToken[]
+  id                      String                   @id @default(cuid())
+  email                   String                   @unique
+  passwordHash            String
+  name                    String?
+  phone                   String?
+  createdAt               DateTime                 @default(now())
+  emailVerified           DateTime?
+  twoFactorEnabled        Boolean                  @default(false)
+  twoFactorSecret         String?
+  subscription            Subscription?
+  passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  twoFactorChallenges     TwoFactorChallenge[]
 }
 
 model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// Short-lived, single-use bridge between "password verified" and "TOTP
+// verified" during a 2FA login — lets the second step re-authenticate via
+// NextAuth's "two-factor" Credentials provider without ever re-transmitting
+// or storing the plaintext password (see src/lib/auth.ts).
+model TwoFactorChallenge {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -39,20 +70,20 @@ enum SubscriptionStatus {
 }
 
 model Subscription {
-  id                   String              @id @default(cuid())
-  userId               String              @unique
-  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  stripeCustomerId     String?             @unique
-  stripeSubscriptionId String?             @unique
-  status               SubscriptionStatus  @default(none)
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String?            @unique
+  stripeSubscriptionId String?            @unique
+  status               SubscriptionStatus @default(none)
   currentPeriodEnd     DateTime?
-  updatedAt            DateTime            @updatedAt
+  updatedAt            DateTime           @updatedAt
 }
 
 model TrackedFigure {
-  id       String   @id @default(cuid())
+  id       String @id @default(cuid())
   name     String
-  xHandle  String   @unique
+  xHandle  String @unique
   category String
   posts    Post[]
 }
@@ -88,14 +119,14 @@ enum TradeDirection {
 }
 
 model Trade {
-  id                String         @id @default(cuid())
-  politicianName    String
-  ticker            String
-  direction         TradeDirection
-  amountRangeLow     Int
-  amountRangeHigh    Int
-  filedDate         DateTime
-  transactionDate   DateTime
+  id              String         @id @default(cuid())
+  politicianName  String
+  ticker          String
+  direction       TradeDirection
+  amountRangeLow  Int
+  amountRangeHigh Int
+  filedDate       DateTime
+  transactionDate DateTime
 
   @@index([ticker])
   @@index([filedDate])
@@ -112,14 +143,14 @@ enum EventImpact {
 // situation). Real ingestion via a third-party economic-calendar API is a
 // documented follow-up.
 model EconomicEvent {
-  id         String      @id @default(cuid())
-  eventName  String
-  currency   String
-  impact     EventImpact
-  eventTime  DateTime
-  actual     String?
-  forecast   String?
-  previous   String?
+  id        String      @id @default(cuid())
+  eventName String
+  currency  String
+  impact    EventImpact
+  eventTime DateTime
+  actual    String?
+  forecast  String?
+  previous  String?
 
   @@index([eventTime])
 }

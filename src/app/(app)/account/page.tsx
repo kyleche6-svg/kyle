@@ -4,9 +4,12 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logout } from "@/app/actions/auth";
 import { createPortalSession } from "@/app/actions/billing";
+import { CheckCircle, WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import { Panel } from "@/components/Panel";
 import { DeleteAccountButton } from "@/components/DeleteAccountButton";
 import { ProfileForm } from "@/components/ProfileForm";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
+import { TwoFactorSetup } from "@/components/TwoFactorSetup";
 
 export default async function AccountPage() {
   const session = await auth();
@@ -27,8 +30,22 @@ export default async function AccountPage() {
 
       <Panel title="Profile" className="mt-6">
         <p className="text-sm">{session.user.email}</p>
+        {user?.emailVerified ? (
+          <p className="mt-1 flex items-center gap-1.5 text-xs text-positive">
+            <CheckCircle size={14} weight="fill" /> Email verified
+          </p>
+        ) : (
+          <div className="mt-1">
+            <p className="flex items-center gap-1.5 text-xs text-muted">
+              <WarningCircle size={14} weight="fill" className="text-accent" /> Email not verified
+            </p>
+            <EmailVerificationBanner />
+          </div>
+        )}
         <ProfileForm name={user?.name ?? null} phone={user?.phone ?? null} />
       </Panel>
+
+      <TwoFactorSetup initiallyEnabled={user?.twoFactorEnabled ?? false} />
 
       <Panel title="Subscription" className="mt-4">
         <p className="text-sm">

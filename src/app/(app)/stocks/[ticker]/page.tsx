@@ -17,6 +17,7 @@ import { Panel } from "@/components/Panel";
 import { StatNumber } from "@/components/StatNumber";
 import { PriceChartToggle } from "@/components/PriceChartToggle";
 import { ReturnHistogram } from "@/components/ReturnHistogram";
+import { AddToWatchlistButton } from "@/components/AddToWatchlistButton";
 import { Disclaimer } from "@/components/Disclaimer";
 
 function formatPct(value: number | null, digits = 1) {
@@ -120,7 +121,10 @@ export default async function StockDetailPage({
 
       <div className="mt-3 flex items-baseline justify-between">
         <div>
-          <h1 className="font-mono text-2xl font-semibold">{ticker}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="font-mono text-2xl font-semibold">{ticker}</h1>
+            <AddToWatchlistButton ticker={ticker} />
+          </div>
           <p className="text-sm text-muted">{companyName}</p>
         </div>
         <div className="text-right">

@@ -1,5 +1,15 @@
 import Link from "next/link";
-import { MagnifyingGlass, TrendUp, TrendDown, Minus } from "@phosphor-icons/react/dist/ssr";
+import {
+  MagnifyingGlass,
+  TrendUp,
+  TrendDown,
+  Minus,
+  Scales,
+  UserFocus,
+  CalendarCheck,
+  Coins,
+  SquaresFour,
+} from "@phosphor-icons/react/dist/ssr";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
 import { getStockList } from "@/lib/stocks";
 import { searchStocks } from "@/lib/stock-search";
@@ -86,6 +96,28 @@ export default async function StocksPage({
           />
         </div>
       </form>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {[
+          { href: "/compare", label: "Compare stocks", icon: Scales },
+          { href: "/insider-trading", label: "Insider trading", icon: UserFocus },
+          { href: "/earnings-calendar", label: "Earnings calendar", icon: CalendarCheck },
+          { href: "/dividend-calendar", label: "Dividend calendar", icon: Coins },
+          { href: "/heatmap", label: "Sector heatmap", icon: SquaresFour },
+        ].map((tool) => {
+          const Icon = tool.icon;
+          return (
+            <Link
+              key={tool.href}
+              href={tool.href}
+              className="flex items-center gap-1.5 rounded-full border border-panel-border px-3 py-1.5 text-xs text-muted transition-colors hover:border-accent hover:text-foreground"
+            >
+              <Icon size={14} />
+              {tool.label}
+            </Link>
+          );
+        })}
+      </div>
 
       {movers && (
         <div className="stagger-children mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">

@@ -27,9 +27,9 @@ export default function PrivacyPage() {
           <h2 className="mb-2 text-foreground">3. Third parties</h2>
           <p>
             [PLACEHOLDER] We share data with the following third parties as
-            necessary to operate the service: Stripe (billing), Twelve Data
-            (market data), and X/Twitter (post data). Each processes data
-            under their own privacy policy.
+            necessary to operate the service: Stripe (billing) and Twelve
+            Data (market data). Each processes data under their own privacy
+            policy.
           </p>
         </section>
         <section>

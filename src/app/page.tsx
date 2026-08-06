@@ -6,7 +6,7 @@ import {
   Table,
   ArrowRight,
   Bank,
-  ChatCircleText,
+  Trophy,
   TrendUp,
 } from "@phosphor-icons/react/dist/ssr";
 import { Panel } from "@/components/Panel";
@@ -29,15 +29,15 @@ const pillars = [
   },
   {
     icon: Bank,
-    title: "Politicians",
-    body: "Congressional trade disclosures (STOCK Act filings), tracked as a feed and monthly leaderboard.",
+    title: "Senate Tracker",
+    body: "Real congressional trade disclosures (STOCK Act filings), scraped live from the Senate's own disclosure system.",
     href: "/politicians",
   },
   {
-    icon: ChatCircleText,
-    title: "Tweets",
-    body: "Market-moving posts correlated to tickers, with historical price-reaction windows.",
-    href: "/tweets",
+    icon: Trophy,
+    title: "Top Traders",
+    body: "Real SEC 13F institutional holdings — what Buffett, Dalio, and other major funds actually disclosed holding.",
+    href: "/top-traders",
   },
 ];
 

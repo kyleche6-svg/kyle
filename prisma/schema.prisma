@@ -80,39 +80,6 @@ model Subscription {
   updatedAt            DateTime           @updatedAt
 }
 
-model TrackedFigure {
-  id       String @id @default(cuid())
-  name     String
-  xHandle  String @unique
-  category String
-  posts    Post[]
-}
-
-model Post {
-  id              String          @id @default(cuid())
-  trackedFigureId String
-  trackedFigure   TrackedFigure   @relation(fields: [trackedFigureId], references: [id], onDelete: Cascade)
-  xPostId         String          @unique
-  text            String
-  postedAt        DateTime
-  taggedTickers   String[]
-  priceSnapshots  PriceSnapshot[]
-
-  @@index([postedAt])
-}
-
-model PriceSnapshot {
-  id          String   @id @default(cuid())
-  postId      String
-  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  ticker      String
-  windowLabel String // "-15m" | "+1h" | "eod"
-  price       Float
-  capturedAt  DateTime @default(now())
-
-  @@index([postId])
-}
-
 enum TradeDirection {
   buy
   sell

@@ -1,35 +1,15 @@
 "use server";
 
 import crypto from "node:crypto";
-import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { sendVerificationEmail } from "@/lib/email";
+import { sendVerificationLink } from "@/lib/email";
 import { checkGeneralLimit, checkLoginLimit, getRequestIp } from "@/lib/rate-limit";
 
 const VERIFY_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 function hashToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
-}
-
-async function getOrigin() {
-  const headerList = await headers();
-  const host = headerList.get("host");
-  const protocol = host?.startsWith("localhost") ? "http" : "https";
-  return `${protocol}://${host}`;
-}
-
-export async function sendVerificationLink(userId: string, email: string) {
-  const rawToken = crypto.randomBytes(32).toString("hex");
-  const tokenHash = hashToken(rawToken);
-  const expiresAt = new Date(Date.now() + VERIFY_TOKEN_TTL_MS);
-
-  await prisma.emailVerificationToken.create({ data: { userId, tokenHash, expiresAt } });
-
-  const origin = await getOrigin();
-  const verifyUrl = `${origin}/verify-email?token=${rawToken}`;
-  await sendVerificationEmail(email, verifyUrl);
 }
 
 export type ResendVerificationState = { message: string } | undefined;

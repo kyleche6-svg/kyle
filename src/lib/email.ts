@@ -1,4 +1,7 @@
+import crypto from "node:crypto";
+import { headers } from "next/headers";
 import { Resend } from "resend";
+import { prisma } from "@/lib/prisma";
 
 // Real email via Resend when configured. Unlike other unconfigured
 // integrations in this app, there's no meaningful "mock" for actually
@@ -32,6 +35,37 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
       <p>If you didn't request this, you can safely ignore this email.</p>
     `,
   });
+}
+
+const VERIFY_TOKEN_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function hashToken(token: string) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
+async function getOrigin() {
+  const headerList = await headers();
+  const host = headerList.get("host");
+  const protocol = host?.startsWith("localhost") ? "http" : "https";
+  return `${protocol}://${host}`;
+}
+
+// Deliberately NOT exported from a "use server" action file: every export
+// in one of those becomes a directly RPC-callable action regardless of
+// whether it's wired to a form, and this takes a raw userId with no
+// authorization check of its own — callable only from within already
+// auth-checked server actions (signup, resendVerificationEmail), never
+// reachable from the client.
+export async function sendVerificationLink(userId: string, email: string) {
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  const tokenHash = hashToken(rawToken);
+  const expiresAt = new Date(Date.now() + VERIFY_TOKEN_TTL_MS);
+
+  await prisma.emailVerificationToken.create({ data: { userId, tokenHash, expiresAt } });
+
+  const origin = await getOrigin();
+  const verifyUrl = `${origin}/verify-email?token=${rawToken}`;
+  await sendVerificationEmail(email, verifyUrl);
 }
 
 export async function sendVerificationEmail(email: string, verifyUrl: string) {

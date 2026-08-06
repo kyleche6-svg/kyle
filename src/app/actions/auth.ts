@@ -9,8 +9,8 @@ import { stripe } from "@/lib/stripe";
 import { SignupFormSchema, type SignupFormState } from "@/lib/definitions";
 import { checkGeneralLimit, checkLoginLimit, getRequestIp } from "@/lib/rate-limit";
 import { verifyTurnstile } from "@/lib/turnstile";
-import { sendVerificationLink } from "@/app/actions/email-verification";
-import { issueTwoFactorChallenge } from "@/app/actions/two-factor";
+import { sendVerificationLink } from "@/lib/email";
+import { issueTwoFactorChallenge } from "@/lib/two-factor-challenge";
 
 function logRateLimitViolation(details: Record<string, string>) {
   console.warn(JSON.stringify({ event: "rate_limit_violation", ...details }));

@@ -1,6 +1,5 @@
 "use server";
 
-import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -8,13 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { auth, signIn } from "@/lib/auth";
 import { decryptSecret, encryptSecret, generateQrCodeDataUrl, generateTotpSecret, verifyTotpCode } from "@/lib/totp";
 import { checkLoginLimit, getRequestIp } from "@/lib/rate-limit";
-
-const CHALLENGE_COOKIE = "2fa_pending";
-const CHALLENGE_TTL_MS = 5 * 60 * 1000; // 5 minutes — short-lived on purpose
-
-function hashToken(token: string) {
-  return crypto.createHash("sha256").update(token).digest("hex");
-}
+import { CHALLENGE_COOKIE, hashChallengeToken } from "@/lib/two-factor-challenge";
 
 // Step 1 of setup: generate a fresh TOTP secret and its QR code, but don't
 // persist or enable anything yet — nothing is stored until the user proves
@@ -88,27 +81,6 @@ export async function disableTwoFactor(
   return { message: "Two-factor authentication has been disabled." };
 }
 
-// Called from the login action once the password has already checked out
-// for a user with 2FA enabled — issues a short-lived, single-use challenge
-// so step 2 (the code form) never needs the plaintext password again.
-export async function issueTwoFactorChallenge(userId: string) {
-  const rawToken = crypto.randomBytes(32).toString("hex");
-  const tokenHash = hashToken(rawToken);
-  const expiresAt = new Date(Date.now() + CHALLENGE_TTL_MS);
-
-  await prisma.twoFactorChallenge.deleteMany({ where: { userId } });
-  await prisma.twoFactorChallenge.create({ data: { userId, tokenHash, expiresAt } });
-
-  const cookieStore = await cookies();
-  cookieStore.set(CHALLENGE_COOKIE, rawToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: CHALLENGE_TTL_MS / 1000,
-    path: "/",
-  });
-}
-
 export type VerifyTwoFactorState = { message: string } | undefined;
 
 export async function verifyTwoFactorLogin(
@@ -123,7 +95,7 @@ export async function verifyTwoFactorLogin(
     return { message: "Your login session expired. Please log in again." };
   }
 
-  const tokenHash = hashToken(challengeToken);
+  const tokenHash = hashChallengeToken(challengeToken);
   const challenge = await prisma.twoFactorChallenge.findUnique({ where: { tokenHash } });
 
   if (!challenge || challenge.expiresAt < new Date()) {

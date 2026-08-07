@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { TrendUp, TrendDown, Minus } from "@phosphor-icons/react/dist/ssr";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
-import { getRecentInsiderTrades } from "@/lib/insider-trading";
+import { getInsiderTrades } from "@/lib/insider-trading";
 import { Panel } from "@/components/Panel";
 import { Disclaimer } from "@/components/Disclaimer";
 
@@ -12,15 +12,16 @@ function formatUsd(n: number) {
 export default async function InsiderTradingPage() {
   await requireActiveSubscription();
 
-  const trades = await getRecentInsiderTrades(50);
+  const trades = await getInsiderTrades(300);
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      <h1 className="text-2xl font-semibold">Insider Trading</h1>
+      <h1 className="animate-sprint-in-left text-2xl font-semibold">Insider Trading</h1>
       <p className="mt-1 max-w-3xl text-sm text-muted">
-        Real SEC Form 4 filings — company officers, directors, and 10%+ owners disclosing trades in
-        their own company&apos;s stock, sourced live from SEC EDGAR. Insiders must file within 2
-        business days of a transaction, so this reflects that window, not real-time.
+        Every SEC Form 4 filing from a full day, backfilled from SEC&apos;s daily index — company
+        officers, directors, and 10%+ owners disclosing trades in their own company&apos;s stock, no
+        filtering by name or company. Insiders must file within 2 business days of a transaction, so
+        this reflects that window, not real-time.
       </p>
 
       <Panel title={`Recent filings (${trades.length})`} className="mt-6">

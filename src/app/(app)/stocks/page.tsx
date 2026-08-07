@@ -74,7 +74,7 @@ export default async function StocksPage({
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      <h1 className="text-2xl font-semibold">Stocks</h1>
+      <h1 className="animate-sprint-in-left text-2xl font-semibold">Stocks</h1>
       <p className="mt-1 text-sm text-muted">
         Search any ticker. Live prices with real third-party analyst consensus
         data — Buy/Hold/Sell counts and price targets as reported by analysts,

@@ -4,9 +4,9 @@ import { Trophy, TrendUp } from "@phosphor-icons/react/dist/ssr";
 export type PodiumStock = { ticker: string; changePercent: number };
 
 const PLACES = [
-  { rank: 2, order: "order-1", height: "h-24", medal: "#c7cad1", label: "2nd" },
-  { rank: 1, order: "order-2", height: "h-32", medal: "#f0b429", label: "1st" },
-  { rank: 3, order: "order-3", height: "h-16", medal: "#c9895a", label: "3rd" },
+  { rank: 2, order: "order-1", height: "h-24", medal: "#c7cad1", label: "2nd", delay: "150ms" },
+  { rank: 1, order: "order-2", height: "h-32", medal: "#f0b429", label: "1st", delay: "0ms" },
+  { rank: 3, order: "order-3", height: "h-16", medal: "#c9895a", label: "3rd", delay: "300ms" },
 ] as const;
 
 function formatDelta(changePercent: number) {
@@ -41,9 +41,10 @@ export function GainersPodium({ stocks }: { stocks: PodiumStock[] }) {
               {formatDelta(stock.changePercent)}
             </p>
             <div
-              className={`mt-2 flex w-full ${place.height} items-start justify-center rounded-t-md border border-b-0 border-panel-border pt-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-[filter] duration-300 group-hover/podium:brightness-110`}
+              className={`animate-podium-rise mt-2 flex w-full ${place.height} items-start justify-center rounded-t-md border border-b-0 border-panel-border pt-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-[filter] duration-300 group-hover/podium:brightness-110`}
               style={{
                 background: `linear-gradient(180deg, color-mix(in srgb, ${place.medal} 22%, var(--panel)) 0%, var(--panel) 100%)`,
+                animationDelay: place.delay,
               }}
             >
               <span className="text-xs font-semibold text-muted">{place.label}</span>

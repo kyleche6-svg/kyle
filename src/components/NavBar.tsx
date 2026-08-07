@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   ChartLine,
-  Bank,
+  UserFocus,
   Tag,
   UserCircle,
   TrendUp,
@@ -20,7 +20,7 @@ const links = [
   { href: "/watchlist", label: "Watchlist", icon: Star },
   { href: "/portfolio", label: "Portfolio", icon: Briefcase },
   { href: "/top-traders", label: "Top Traders", icon: Trophy },
-  { href: "/politicians", label: "Senate Tracker", icon: Bank },
+  { href: "/insider-trading", label: "Insider Trading", icon: UserFocus },
   { href: "/pricing", label: "Pricing", icon: Tag },
 ];
 

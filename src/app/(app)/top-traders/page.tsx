@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Buildings, Sparkle, ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { Buildings, Sparkle, ArrowRight, MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
-import { getTopTraderPortfolios } from "@/lib/institutional-holdings";
+import { getTopTraderPortfolios, searchInstitutionalFilers } from "@/lib/institutional-holdings";
 import { getSpeculativeContext } from "@/lib/holdings-context";
 import { Panel } from "@/components/Panel";
 import { Disclaimer } from "@/components/Disclaimer";
@@ -17,15 +17,25 @@ function formatFilingDate(iso: string | null) {
   return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
 }
 
-export default async function TopTradersPage() {
+export default async function TopTradersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
   await requireActiveSubscription();
 
-  const funds = await getTopTraderPortfolios();
+  const { q } = await searchParams;
+  const query = q?.trim() ?? "";
+
+  const [funds, searchResults] = await Promise.all([
+    getTopTraderPortfolios(),
+    query ? searchInstitutionalFilers(query) : Promise.resolve([]),
+  ]);
   const contextByFund = await Promise.all(funds.map((fund) => getSpeculativeContext(fund)));
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      <h1 className="text-2xl font-semibold">Top Traders</h1>
+      <h1 className="animate-sprint-in-left text-2xl font-semibold">Top Traders</h1>
       <p className="mt-1 max-w-3xl text-sm text-muted">
         Real institutional holdings from SEC Form 13F filings — what large
         investment managers ($100M+ AUM) publicly disclosed holding as of
@@ -43,7 +53,45 @@ export default async function TopTradersPage() {
         </span>
       </p>
 
-      <div className="stagger-children mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <form method="GET" className="mt-6">
+        <div className="relative max-w-sm">
+          <MagnifyingGlass
+            size={16}
+            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-muted"
+          />
+          <input
+            type="text"
+            name="q"
+            defaultValue={query}
+            placeholder="Search any 13F filer by name…"
+            className="w-full rounded-md border border-panel-border bg-panel py-2 pr-3 pl-9 text-sm outline-none focus:border-accent"
+          />
+        </div>
+      </form>
+
+      {query && (
+        <Panel title={`Search results for "${query}"`} className="mt-4">
+          {searchResults.length === 0 ? (
+            <p className="text-sm text-muted">No 13F filers matched that name.</p>
+          ) : (
+            <div className="flex flex-col divide-y divide-panel-border">
+              {searchResults.map((result) => (
+                <Link
+                  key={result.cik}
+                  href={`/top-traders/${result.cik}`}
+                  className="flex items-center justify-between py-2.5 text-sm transition-colors hover:text-accent"
+                >
+                  <span>{result.name}</span>
+                  <ArrowRight size={14} />
+                </Link>
+              ))}
+            </div>
+          )}
+        </Panel>
+      )}
+
+      <h2 className="mt-6 text-lg font-medium">Popular funds</h2>
+      <div className="stagger-children mt-3 grid grid-cols-1 gap-4 lg:grid-cols-2">
         {funds.map((fund, i) => {
           const notes = contextByFund[i];
           return (

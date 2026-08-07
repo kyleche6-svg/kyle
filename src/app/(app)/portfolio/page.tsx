@@ -46,7 +46,7 @@ export default async function PortfolioPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      <h1 className="text-2xl font-semibold">Portfolio Tracker</h1>
+      <h1 className="animate-sprint-in-left text-2xl font-semibold">Portfolio Tracker</h1>
       <p className="mt-1 text-sm text-muted">
         Manually entered holdings, tracked against live prices. A calculator — nothing here is
         pulled from a brokerage or verified, and it&apos;s not a recommendation about what to hold.

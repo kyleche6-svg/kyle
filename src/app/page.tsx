@@ -5,7 +5,7 @@ import {
   BookOpen,
   Table,
   ArrowRight,
-  Bank,
+  UserFocus,
   Trophy,
   TrendUp,
 } from "@phosphor-icons/react/dist/ssr";
@@ -28,10 +28,10 @@ const pillars = [
     href: "/stocks",
   },
   {
-    icon: Bank,
-    title: "Senate Tracker",
-    body: "Real congressional trade disclosures (STOCK Act filings), scraped live from the Senate's own disclosure system.",
-    href: "/politicians",
+    icon: UserFocus,
+    title: "Insider Trading",
+    body: "Real SEC Form 4 filings — every officer, director, and 10%+ owner disclosing trades in their own company's stock, live from EDGAR.",
+    href: "/insider-trading",
   },
   {
     icon: Trophy,
@@ -53,13 +53,13 @@ export default function Home() {
         <MarketSkyline />
         <div className="relative mx-auto max-w-6xl px-6 pt-14 pb-4">
           <div className="max-w-2xl">
-            <h1 className="text-4xl font-semibold tracking-tight">
+            <h1 className="animate-sprint-in-left text-4xl font-semibold tracking-tight">
               Terminal-grade market intelligence. Self-serve pricing.
             </h1>
-            <p className="mt-4 text-lg text-muted">
-              USD strength, congressional trade disclosures, and
-              market-moving signals — correlated in one desk, without the
-              enterprise contract.
+            <p className="animate-sprint-in-right mt-4 text-lg text-muted">
+              USD strength, insider trading disclosures, and institutional
+              holdings — correlated in one desk, without the enterprise
+              contract.
             </p>
             <div className="mt-8 flex gap-3">
               <Link
@@ -114,7 +114,7 @@ export default function Home() {
                 <StatNumber label="USD vs EUR" value="1.082" delta="+0.41%" accent />
                 <StatNumber label="NVDA · Strong Buy" value="$138.66" delta="+0.47%" />
                 <StatNumber label="Gold" value="$2,381.20" delta="+0.34%" />
-                <StatNumber label="Congress buys (30d)" value="142" delta="+18" />
+                <StatNumber label="Insider filings tracked (1 day)" value="1,100+" />
               </div>
               <div className="mt-4 flex flex-col gap-1.5 border-t border-panel-border pt-4 text-xs text-muted">
                 <p>Fed Interest Rate Decision — today, 9:30 AM</p>

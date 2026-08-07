@@ -6,7 +6,7 @@ const features = [
   "USD strength dashboard with live currency & commodity views",
   "Economic calendar with high-impact event tracking",
   "Stock screener with real third-party analyst consensus data",
-  "Congressional trading disclosures, scraped live from the Senate's own system",
+  "Insider trading feed — every SEC Form 4 filing, live from EDGAR",
   "Real SEC 13F institutional holdings for major funds",
   "Daily AI-written market brief, grounded in real site data",
   "Full access to all future dashboard features",

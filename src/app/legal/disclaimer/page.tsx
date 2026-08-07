@@ -20,8 +20,8 @@ export default function DisclaimerPage() {
           <p>
             [PLACEHOLDER] We make no representation or warranty as to the
             accuracy, completeness, or timeliness of any data shown,
-            including currency prices, congressional trade disclosures, or
-            tracked posts.
+            including currency prices, insider trading disclosures, or
+            institutional holdings data.
           </p>
         </section>
         <section>

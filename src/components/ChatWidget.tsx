@@ -7,7 +7,7 @@ type ChatMessage = { role: "user" | "assistant"; content: string };
 
 const STARTER_PROMPTS = [
   "What's the analyst consensus on NVDA?",
-  "Any recent trades from Nancy Pelosi?",
+  "Any recent insider trades I should know about?",
   "What's on the economic calendar this week?",
 ];
 

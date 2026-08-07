@@ -35,8 +35,8 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
       <div className="flex items-baseline justify-between">
-        <h1 className="text-2xl font-semibold">Market Dashboard</h1>
-        <p className="text-xs text-muted">Refreshed on an interval, not live-polled per request.</p>
+        <h1 className="animate-sprint-in-left text-2xl font-semibold">Market Dashboard</h1>
+        <p className="animate-sprint-in-right text-xs text-muted">Refreshed on an interval, not live-polled per request.</p>
       </div>
 
       <div className="stagger-children mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-[repeat(7,minmax(0,1fr))]">

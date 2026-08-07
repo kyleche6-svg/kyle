@@ -9,7 +9,7 @@ import {
 } from "@/lib/stocks";
 import { searchStocks } from "@/lib/stock-search";
 import { getHistoricalReturnFrequency } from "@/lib/historical-stats";
-import { getRecentTrades, getPoliticianTrades, getPoliticianPortfolio, getMonthlyBuyLeaderboard } from "@/lib/trades";
+import { getInsiderTrades } from "@/lib/insider-trading";
 import { getEconomicEvents } from "@/lib/economic-calendar";
 
 // Every tool here only reads data that is already shown elsewhere on
@@ -89,23 +89,18 @@ export const CHAT_TOOLS: ChatToolDef[] = [
     parameters: { type: "object", properties: {} },
   },
   {
-    name: "get_politician_trades",
+    name: "get_insider_trades",
     description:
-      "Get recent congressional stock trade disclosures overall, or for one named politician, plus that politician's estimated portfolio by ticker if a name is given.",
+      "Get recent SEC Form 4 insider trading filings — company officers, directors, and 10%+ owners disclosing trades in their own company's stock. Optionally filter to one ticker.",
     parameters: {
       type: "object",
       properties: {
-        politicianName: {
+        ticker: {
           type: "string",
-          description: "Full name of a politician to filter to, omit for the general recent-filings feed",
+          description: "Stock ticker to filter to, omit for the general recent-filings feed",
         },
       },
     },
-  },
-  {
-    name: "get_most_bought_this_month",
-    description: "Get the tickers most bought by politicians (by disclosed filing count) this month.",
-    parameters: { type: "object", properties: {} },
   },
 ];
 
@@ -160,19 +155,9 @@ export async function executeChatTool(name: string, input: Record<string, unknow
     case "get_economic_calendar": {
       return { events: await getEconomicEvents() };
     }
-    case "get_politician_trades": {
-      const politicianName = typeof input.politicianName === "string" ? input.politicianName : undefined;
-      if (politicianName) {
-        const [trades, portfolio] = await Promise.all([
-          getPoliticianTrades(politicianName),
-          getPoliticianPortfolio(politicianName),
-        ]);
-        return { politicianName, trades, portfolio };
-      }
-      return { trades: await getRecentTrades(30) };
-    }
-    case "get_most_bought_this_month": {
-      return { leaderboard: await getMonthlyBuyLeaderboard() };
+    case "get_insider_trades": {
+      const ticker = typeof input.ticker === "string" ? input.ticker.toUpperCase() : undefined;
+      return { trades: await getInsiderTrades(60, ticker) };
     }
     default:
       return { error: `Unknown tool: ${name}` };

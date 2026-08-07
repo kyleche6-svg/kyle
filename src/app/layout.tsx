@@ -18,7 +18,7 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "DollarWatch — Terminal-Grade Market Intelligence",
   description:
-    "USD strength, congressional trade disclosures, and market-moving signals — correlated in one desk, self-serve pricing.",
+    "USD strength, insider trading disclosures, and institutional holdings — correlated in one desk, self-serve pricing.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

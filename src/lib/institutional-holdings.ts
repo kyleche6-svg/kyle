@@ -20,12 +20,14 @@ export const TRACKED_FUNDS = [
 export type FundHolding = { issuer: string; cusip: string; valueUsd: number; weight: number };
 export type FundPortfolio = {
   name: string;
-  manager: string;
+  manager: string | null;
   cik: string;
   filingDate: string | null;
   totalValueUsd: number;
   holdings: FundHolding[];
 };
+
+type FundRef = { name: string; manager: string | null; cik: string };
 
 async function secJson(url: string) {
   const res = await fetch(url, {
@@ -45,13 +47,27 @@ async function secText(url: string) {
   return res.text();
 }
 
+function decodeXmlEntities(text: string): string {
+  return text
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'");
+}
+
+// Some filers' infoTable XML uses an unprefixed default namespace
+// (<infoTable>, <nameOfIssuer>); others use an explicit namespace prefix
+// (<n1:infoTable>, <n1:nameOfIssuer>) — confirmed live against real
+// filings (e.g. Berkshire vs. Millennium Management). Tolerate an
+// optional prefix rather than assuming one shape.
 function extractTag(block: string, tag: string): string | null {
-  const match = block.match(new RegExp(`<${tag}>([^<]*)</${tag}>`));
-  return match ? match[1].trim() : null;
+  const match = block.match(new RegExp(`<(?:\\w+:)?${tag}>([^<]*)</(?:\\w+:)?${tag}>`));
+  return match ? decodeXmlEntities(match[1].trim()) : null;
 }
 
 function parseInfoTable(xml: string): { issuer: string; cusip: string; value: number }[] {
-  const blocks = xml.match(/<infoTable>[\s\S]*?<\/infoTable>/g) ?? [];
+  const blocks = xml.match(/<(?:\w+:)?infoTable>[\s\S]*?<\/(?:\w+:)?infoTable>/g) ?? [];
   return blocks
     .map((block) => {
       const issuer = extractTag(block, "nameOfIssuer");
@@ -66,10 +82,7 @@ function parseInfoTable(xml: string): { issuer: string; cusip: string; value: nu
     .filter((row): row is { issuer: string; cusip: string; value: number } => row !== null);
 }
 
-async function fetchLatestPortfolio(
-  fund: (typeof TRACKED_FUNDS)[number],
-  holdingsLimit = 10,
-): Promise<FundPortfolio> {
+async function fetchLatestPortfolio(fund: FundRef, holdingsLimit = 10): Promise<FundPortfolio> {
   const empty: FundPortfolio = {
     name: fund.name,
     manager: fund.manager,
@@ -139,10 +152,62 @@ export async function getTopTraderPortfolios(): Promise<FundPortfolio[]> {
   return Promise.all(TRACKED_FUNDS.map((fund) => fetchLatestPortfolio(fund)));
 }
 
+// Works for any CIK, not just the curated list above — falls back to the
+// filer's own registered name from SEC's submissions data when it isn't
+// one of the named funds we track a "manager" label for.
 export async function getFundPortfolioByCik(cik: string): Promise<FundPortfolio | null> {
-  const fund = TRACKED_FUNDS.find((f) => f.cik === cik);
-  if (!fund) return null;
-  return fetchLatestPortfolio(fund, 30);
+  const padded = cik.padStart(10, "0");
+  const curated = TRACKED_FUNDS.find((f) => f.cik === padded);
+  if (curated) return fetchLatestPortfolio(curated, 30);
+
+  const submissions = await secJson(`https://data.sec.gov/submissions/CIK${padded}.json`);
+  const name = submissions?.name;
+  if (!name) return null;
+
+  return fetchLatestPortfolio({ name, manager: null, cik: padded }, 30);
+}
+
+export type FilerSearchResult = { name: string; cik: string };
+
+// Real-time company search against SEC EDGAR, filtered to 13F filers —
+// covers any of the thousands of institutional managers on file, not just
+// the curated shortlist. A single lightweight request, safe to call
+// per-keystroke-adjacent search UIs without the rate-limit risk that
+// fetching full holdings for many filers at once would carry.
+export async function searchInstitutionalFilers(query: string): Promise<FilerSearchResult[]> {
+  const trimmed = query.trim();
+  if (!trimmed) return [];
+
+  // Note: this endpoint's output=atom variant is broken on SEC's side for
+  // company-name search (returns literal "ARRAY(0x...)" instead of real
+  // names — confirmed live, not a parsing bug here) — the plain HTML
+  // results table is reliable, so that's what this parses instead.
+  const html = await secText(
+    `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&company=${encodeURIComponent(trimmed)}&type=13F&dateb=&owner=include&count=40`,
+  );
+  if (!html) return [];
+
+  const rows = [...html.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)].map((m) => m[1]);
+  const seen = new Set<string>();
+  const results: FilerSearchResult[] = [];
+
+  for (const row of rows) {
+    const cikMatch = row.match(/CIK=(\d+)/);
+    const cells = [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map((m) =>
+      m[1].replace(/<[^>]+>/g, "").trim(),
+    );
+    if (!cikMatch || cells.length < 2) continue;
+
+    const cik = cikMatch[1].padStart(10, "0");
+    if (seen.has(cik)) continue;
+    seen.add(cik);
+
+    const name = cells[1];
+    if (!name) continue;
+    results.push({ name, cik });
+  }
+
+  return results.slice(0, 20);
 }
 
 export type FilingHistoryEntry = { filingDate: string; accessionNumber: string; edgarUrl: string };

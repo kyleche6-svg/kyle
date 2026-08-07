@@ -2,7 +2,7 @@ import Groq from "groq-sdk";
 import { CURRENCY_PAIRS, COMMODITIES, getQuote } from "@/lib/market-data";
 import { getEconomicEvents } from "@/lib/economic-calendar";
 import { getStockList } from "@/lib/stocks";
-import { getRecentRealTrades } from "@/lib/real-trades";
+import { getInsiderTrades } from "@/lib/insider-trading";
 
 export type DailyBrief = {
   dateLabel: string;
@@ -27,7 +27,7 @@ async function gatherMarketData() {
     Promise.all(COMMODITIES.map((c) => getQuote(c.symbol, c.label, c.basePrice))),
     getEconomicEvents(),
     getStockList(),
-    getRecentRealTrades(15),
+    getInsiderTrades(15),
   ]);
 
   const gainers = [...stocks].sort((a, b) => b.quote.changePercent - a.quote.changePercent).slice(0, 5);
@@ -75,13 +75,13 @@ function buildDataSummary(data: Awaited<ReturnType<typeof gatherMarketData>>): s
     lines.push(`- ${s.ticker} (${s.companyName}): ${s.quote.changePercent.toFixed(2)}%, analyst consensus: ${s.consensus}`);
   }
 
-  lines.push("\nRECENT SENATE TRADE DISCLOSURES (STOCK Act, real, most recent filings):");
+  lines.push("\nRECENT INSIDER TRADING (SEC Form 4, real, most recent filings):");
   if (data.trades.length === 0) {
     lines.push("- No recent filings in our data.");
   } else {
     for (const t of data.trades.slice(0, 10)) {
       lines.push(
-        `- ${t.politicianName} ${t.direction === "buy" ? "bought" : "sold"} ${t.ticker}, $${t.amountRangeLow.toLocaleString()}-$${t.amountRangeHigh.toLocaleString()}, filed ${t.filedDate.toDateString()}`,
+        `- ${t.ownerName} (${t.relationship} of ${t.issuerName}) — ${t.transactionCode} of ${t.shares.toLocaleString()} shares of ${t.ticker}${t.pricePerShare ? ` at $${t.pricePerShare.toFixed(2)}` : ""}, filed ${t.filedDate}`,
       );
     }
   }
@@ -97,7 +97,7 @@ Hard rules, no exceptions:
 - Never recommend buying, selling, or holding anything, and never rank securities by attractiveness.
 - If a section's data is sparse or empty, say so plainly and keep that section short — do not pad it with invented content.
 - Write in a clear, professional news-desk tone — factual and readable, not hype, not clickbait.
-- Return strict JSON: {"headline": string, "sections": [{"heading": string, "body": string}]}. Produce 4-5 sections covering: currency/commodity moves, today's economic calendar, notable stock movers, and recent Senate trade disclosures. Each body should be 2-4 sentences of plain prose, not a bullet list.`;
+- Return strict JSON: {"headline": string, "sections": [{"heading": string, "body": string}]}. Produce 4-5 sections covering: currency/commodity moves, today's economic calendar, notable stock movers, and recent insider trading filings. Each body should be 2-4 sentences of plain prose, not a bullet list.`;
 
 async function generateBrief(): Promise<DailyBrief> {
   const dateLabel = new Date().toLocaleDateString(undefined, {

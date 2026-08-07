@@ -1,7 +1,9 @@
 // Real SEC Form 4 insider trading feed — company officers/directors/10%+
 // owners disclosing trades in their own company's stock, sourced live from
 // SEC EDGAR's "latest filings" feed (free, no key). Same real-disclosure
-// category as the 13F and STOCK Act data already in this app.
+// category as the 13F data elsewhere in this app.
+import { prisma } from "@/lib/prisma";
+
 const SEC_USER_AGENT = "DollarWatch research tool (contact: support@dollarwatch.app)";
 
 export type InsiderTrade = {
@@ -41,11 +43,20 @@ async function secText(url: string) {
   return res.text();
 }
 
+function decodeXmlEntities(text: string): string {
+  return text
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'");
+}
+
 function extractTag(xml: string, tag: string): string | null {
   const regex = new RegExp(`<${tag}>\\s*(?:<value>)?([^<]*)`, "i");
   const match = xml.match(regex);
   const value = match?.[1]?.trim();
-  return value || null;
+  return value ? decodeXmlEntities(value) : null;
 }
 
 async function fetchFilingDetail(cik: string, accessionNoDashes: string, filedDate: string): Promise<InsiderTrade[]> {
@@ -109,7 +120,7 @@ async function fetchFilingDetail(cik: string, accessionNoDashes: string, filedDa
   return trades;
 }
 
-export async function getRecentInsiderTrades(limit = 40): Promise<InsiderTrade[]> {
+export async function getRecentInsiderTrades(limit = 100): Promise<InsiderTrade[]> {
   const feed = await secText(
     "https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=4&company=&dateb=&owner=include&count=100&output=atom",
   );
@@ -145,4 +156,37 @@ export async function getRecentInsiderTrades(limit = 40): Promise<InsiderTrade[]
   );
 
   return results.flat();
+}
+
+// Comprehensive, DB-backed version — reads results backfilled by
+// scripts/scrape-insider-trades.mjs from SEC's daily index (every filing
+// for a day, no 100-entry cap). Falls back to the live-capped feed above
+// only if the backfill hasn't been run yet, so this always returns
+// something real rather than an empty page.
+export async function getInsiderTrades(limit = 200, ticker?: string): Promise<InsiderTrade[]> {
+  const rows = await prisma.insiderTrade.findMany({
+    where: ticker ? { ticker } : undefined,
+    orderBy: [{ filedDate: "desc" }, { transactionDate: "desc" }],
+    take: limit,
+  });
+
+  if (rows.length === 0) {
+    const live = await getRecentInsiderTrades(100);
+    return ticker ? live.filter((t) => t.ticker === ticker) : live;
+  }
+
+  return rows.map((r) => ({
+    filedDate: r.filedDate.toISOString().slice(0, 10),
+    ticker: r.ticker,
+    issuerName: r.issuerName,
+    ownerName: r.ownerName,
+    relationship: r.relationship,
+    transactionDate: r.transactionDate.toISOString().slice(0, 10),
+    transactionCode: r.transactionCode,
+    direction: r.direction,
+    shares: r.shares,
+    pricePerShare: r.pricePerShare,
+    sharesOwnedAfter: r.sharesOwnedAfter,
+    filingUrl: r.filingUrl,
+  }));
 }

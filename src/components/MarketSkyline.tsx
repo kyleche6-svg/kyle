@@ -4,15 +4,23 @@
 // and masked at the edges so it reads as atmosphere behind the hero copy,
 // never competing with text contrast (Operate/Persuade surfaces both
 // require body text stay legible — see craft-floor.md).
+//
+// Two layers of motion, not a static image being panned:
+//  1. Each bar's own height pulses independently (CSS scaleY,
+//     transform-origin pinned to the baseline) on staggered timing, so it
+//     reads like a live ticking chart rather than a picture.
+//  2. The whole skyline climbs upward forever — content is rendered twice,
+//     stacked, and the wrapper scrolls up by exactly one copy's height on
+//     a linear loop, so the loop point is invisible: a 24/7 rising feed.
 const BAR_HEIGHTS = [40, 55, 48, 70, 62, 88, 78, 105, 96, 130, 118, 155, 142, 175];
 
-export function MarketSkyline() {
+function SkylineSvg() {
   const barWidth = 1200 / BAR_HEIGHTS.length;
 
   return (
     <svg
       viewBox="0 0 1200 400"
-      className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.16]"
+      className="h-full w-full"
       preserveAspectRatio="xMidYMax slice"
       aria-hidden="true"
     >
@@ -35,22 +43,39 @@ export function MarketSkyline() {
         {BAR_HEIGHTS.map((height, i) => (
           <rect
             key={i}
+            className="animate-bar-pulse"
             x={i * barWidth + barWidth * 0.15}
             y={400 - height}
             width={barWidth * 0.7}
             height={height}
             rx={2}
             fill="url(#barGradient)"
+            style={{
+              transformOrigin: `${i * barWidth + barWidth * 0.5}px 400px`,
+              animationDelay: `${(i * 0.37) % 3}s`,
+              animationDuration: `${2.4 + (i % 5) * 0.3}s`,
+            }}
           />
         ))}
-        <path
-          d={`M0,${400 - BAR_HEIGHTS[0]} ${BAR_HEIGHTS.map((h, i) => `L${i * barWidth + barWidth / 2},${400 - h}`).join(" ")}`}
-          stroke="var(--accent)"
-          strokeWidth="1.5"
-          fill="none"
-          opacity="0.6"
-        />
       </g>
     </svg>
+  );
+}
+
+export function MarketSkyline() {
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 h-full w-full overflow-hidden opacity-[0.16]"
+      aria-hidden="true"
+    >
+      <div className="animate-conveyor-up flex h-[200%] w-full flex-col">
+        <div className="h-1/2 w-full">
+          <SkylineSvg />
+        </div>
+        <div className="h-1/2 w-full">
+          <SkylineSvg />
+        </div>
+      </div>
+    </div>
   );
 }

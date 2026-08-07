@@ -88,6 +88,100 @@ body {
   animation: rise-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* Podium bars grow up from the floor like they're being pulled into
+   place, rather than just fading in. transform-origin stays pinned to
+   the bottom so the base never moves, only the height "extends". */
+@keyframes podium-pull-up {
+  from {
+    opacity: 0;
+    transform: scaleY(0) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1) translateY(0);
+  }
+}
+
+.animate-podium-rise {
+  transform-origin: bottom;
+  animation: podium-pull-up 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Endless upward-climbing background — the content is rendered twice,
+   stacked, and this scrolls exactly one copy's height (50% of the
+   doubled-height wrapper) so the loop point is seamless: a 24/7 rising
+   feed, not a still image. */
+@keyframes conveyor-up {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.animate-conveyor-up {
+  animation: conveyor-up 18s linear infinite;
+}
+
+/* Individual bars pulse their own height independently (grows/shrinks from
+   the baseline) so the skyline reads as a live ticking chart rather than
+   artwork being scrolled. */
+@keyframes bar-pulse {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.15);
+  }
+}
+
+.animate-bar-pulse {
+  animation: bar-pulse 3s ease-in-out infinite;
+}
+
+/* "Sprinting in, then stopping" entrance: starts off-screen and leaning
+   into the direction of travel (skew), overshoots slightly past its final
+   position while leaning the other way like decelerating, then settles
+   upright and still — not a plain slide, a run-then-brake. */
+@keyframes sprint-in-left {
+  0% {
+    opacity: 0;
+    transform: translateX(-70px) skewX(-10deg);
+  }
+  65% {
+    opacity: 1;
+    transform: translateX(6px) skewX(4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) skewX(0deg);
+  }
+}
+
+@keyframes sprint-in-right {
+  0% {
+    opacity: 0;
+    transform: translateX(70px) skewX(10deg);
+  }
+  65% {
+    opacity: 1;
+    transform: translateX(-6px) skewX(-4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) skewX(0deg);
+  }
+}
+
+.animate-sprint-in-left {
+  animation: sprint-in-left 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-sprint-in-right {
+  animation: sprint-in-right 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 /* Staggered entrance for grids of cards — each child fades/rises in
    slightly after the previous one, capped so long lists don't take
    forever to finish appearing. */

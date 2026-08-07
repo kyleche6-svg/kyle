@@ -126,31 +126,6 @@ model Subscription {
   updatedAt            DateTime           @updatedAt
 }
 
-enum TradeDirection {
-  buy
-  sell
-}
-
-model Trade {
-  id              String         @id @default(cuid())
-  politicianName  String
-  ticker          String
-  direction       TradeDirection
-  amountRangeLow  Int
-  amountRangeHigh Int
-  filedDate       DateTime
-  transactionDate DateTime
-  // Stable natural key from the source filing (efdsearch.senate.gov PTR UUID
-  // + row index) — makes re-running the scraper idempotent instead of
-  // duplicating rows on every run.
-  externalId      String?        @unique
-  ptrLink         String?
-
-  @@index([ticker])
-  @@index([filedDate])
-  @@index([politicianName])
-}
-
 enum EventImpact {
   high
   medium
@@ -158,8 +133,7 @@ enum EventImpact {
 }
 
 // Economic calendar (ForexFactory-style) — mock-seeded, no official free
-// API exists (see plan notes on the politician-trades feature for the same
-// situation). Real ingestion via a third-party economic-calendar API is a
+// API exists. Real ingestion via a third-party economic-calendar API is a
 // documented follow-up.
 model EconomicEvent {
   id        String      @id @default(cuid())
@@ -172,4 +146,36 @@ model EconomicEvent {
   previous  String?
 
   @@index([eventTime])
+}
+
+enum InsiderDirection {
+  buy
+  sell
+  other
+}
+
+// Real SEC Form 4 filings, backfilled from SEC's daily index (every filing
+// for a given day, no cap) via scripts/scrape-insider-trades.mjs — unlike
+// the live "current filings" feed (hard-capped at 100 entries regardless of
+// requested count), this can hold a genuinely comprehensive day's worth.
+model InsiderTrade {
+  id                 String           @id @default(cuid())
+  ticker             String
+  issuerName         String
+  ownerName          String
+  relationship       String
+  transactionDate    DateTime
+  transactionCode    String
+  direction          InsiderDirection
+  shares             Float
+  pricePerShare      Float?
+  sharesOwnedAfter   Float?
+  filedDate          DateTime
+  filingUrl          String
+  // Stable natural key: accession number + row index within that filing —
+  // makes re-running the backfill idempotent instead of duplicating rows.
+  externalId         String           @unique
+
+  @@index([ticker])
+  @@index([filedDate])
 }

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { ChatWidget } from "@/components/ChatWidget";
 
 // Each page under this group still guards itself (dashboard, stocks,
-// politicians call requireActiveSubscription; account only requires a
+// insider trading call requireActiveSubscription; account only requires a
 // session so inactive users can still view/manage billing).
 // This layout must not add its own blanket subscription redirect on top —
 // that would bounce inactive-subscription users away from /account before

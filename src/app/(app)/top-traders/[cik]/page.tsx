@@ -68,7 +68,7 @@ export default async function TopTraderDetailPage({ params }: { params: Promise<
         <Buildings size={28} weight="light" className="mt-0.5 text-accent" />
         <div>
           <h1 className="text-2xl font-semibold">{fund.name}</h1>
-          <p className="text-sm text-muted">{fund.manager}</p>
+          {fund.manager && <p className="text-sm text-muted">{fund.manager}</p>}
         </div>
       </div>
       <p className="mt-2 text-sm text-muted">

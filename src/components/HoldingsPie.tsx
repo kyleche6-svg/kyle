@@ -67,8 +67,11 @@ export function HoldingsPie({ data }: { data: HoldingSlice[] }) {
               labelLine={{ stroke: "var(--panel-border)", strokeWidth: 1 }}
             >
               {data.map((entry, i) => (
+                // Index, not ticker — the derived pseudo-ticker (first word
+                // of a truncated issuer name) isn't guaranteed unique, e.g.
+                // a fund holding several different "ISHARES..." ETFs.
                 <Cell
-                  key={entry.ticker}
+                  key={`${entry.ticker}-${i}`}
                   fill={COLORS[i % COLORS.length]}
                   stroke="var(--panel)"
                   strokeWidth={2}

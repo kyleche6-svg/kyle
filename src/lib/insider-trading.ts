@@ -119,6 +119,7 @@ export async function getRecentInsiderTrades(limit = 40): Promise<InsiderTrade[]
     .map((m) => m[1])
     .filter((entry) => /term="4"/.test(entry));
 
+  const seenAccessions = new Set<string>();
   const parsed = entries
     .map((entry) => {
       const link = entry.match(/href="([^"]+)"/)?.[1];
@@ -129,6 +130,14 @@ export async function getRecentInsiderTrades(limit = 40): Promise<InsiderTrade[]
       return { cik: cikMatch[1], accessionNoDashes: accessionMatch[1].replace(/-/g, ""), filedDate };
     })
     .filter((x): x is { cik: string; accessionNoDashes: string; filedDate: string } => x !== null)
+    // The SEC's own "getcurrent" feed lists the same accession number more
+    // than once (e.g. once per reporting owner on a jointly-filed Form 4) —
+    // dedupe here rather than showing/fetching the same filing twice.
+    .filter((f) => {
+      if (seenAccessions.has(f.accessionNoDashes)) return false;
+      seenAccessions.add(f.accessionNoDashes);
+      return true;
+    })
     .slice(0, limit);
 
   const results = await Promise.all(

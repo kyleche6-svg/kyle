@@ -69,7 +69,7 @@ export default async function DashboardPage() {
       <div className="mt-6 flex items-baseline justify-between">
         <h2 className="text-lg font-medium">Economic Calendar</h2>
         <p className="text-xs text-muted">
-          High-impact events, forecast vs. actual — mock data, real ingestion is a planned follow-up.
+          Real releases from official statistical agencies, via Financial Modeling Prep.
         </p>
       </div>
       <Panel className="animate-rise-in mt-3">

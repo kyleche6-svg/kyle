@@ -1,5 +1,5 @@
 import { WarningCircle, WarningOctagon, Circle } from "@phosphor-icons/react/dist/ssr";
-import type { EconomicEvent } from "@/generated/prisma/client";
+import type { EconomicEvent } from "@/lib/economic-calendar";
 
 const IMPACT_CONFIG = {
   high: { icon: WarningOctagon, className: "text-negative", label: "High" },
@@ -22,6 +22,14 @@ function formatEventTime(date: Date) {
 }
 
 export function EconomicCalendar({ events }: { events: EconomicEvent[] }) {
+  if (events.length === 0) {
+    return (
+      <p className="py-4 text-sm text-muted">
+        No economic calendar data available right now — set FMP_API_KEY to enable this feed.
+      </p>
+    );
+  }
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">

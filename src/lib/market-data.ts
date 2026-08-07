@@ -130,51 +130,112 @@ export async function getSeries(
   return real ?? mockSeries(basePrice, symbol, points);
 }
 
-export type OhlcPoint = { date: string; open: number; high: number; low: number; close: number };
+export type OhlcPoint = {
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number | null;
+};
 
-async function twelveDataOhlc(symbol: string, points = 30): Promise<OhlcPoint[] | null> {
+// TradingView-style timeframe presets — each maps to a Twelve Data
+// interval + how many bars covers that window. Intraday intervals cost
+// more API credits than daily, so 1D/1W deliberately use the coarsest
+// interval that still looks like a real intraday/short-range chart rather
+// than defaulting everything to 1day.
+export type ChartTimeframe = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y";
+
+export const CHART_TIMEFRAMES: ChartTimeframe[] = ["1D", "1W", "1M", "3M", "6M", "1Y"];
+
+const TIMEFRAME_CONFIG: Record<ChartTimeframe, { interval: string; points: number }> = {
+  "1D": { interval: "5min", points: 78 }, // ~6.5h regular session / 5min bars
+  "1W": { interval: "30min", points: 65 }, // ~5 trading days / 30min bars
+  "1M": { interval: "1day", points: 22 },
+  "3M": { interval: "1day", points: 65 },
+  "6M": { interval: "1day", points: 130 },
+  "1Y": { interval: "1day", points: 252 },
+};
+
+async function twelveDataOhlc(symbol: string, interval: string, points: number): Promise<OhlcPoint[] | null> {
   const apiKey = process.env.TWELVE_DATA_API_KEY;
   if (!apiKey) return null;
 
   try {
     const res = await fetch(
-      `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=1day&outputsize=${points}&apikey=${apiKey}`,
+      `https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(symbol)}&interval=${interval}&outputsize=${points}&apikey=${apiKey}`,
       { next: { revalidate: CACHE_SECONDS } },
     );
     const data = await res.json();
     if (data.code || !Array.isArray(data.values)) return null;
 
     return data.values
-      .map((v: { datetime: string; open: string; high: string; low: string; close: string }) => ({
-        date: v.datetime,
-        open: parseFloat(v.open),
-        high: parseFloat(v.high),
-        low: parseFloat(v.low),
-        close: parseFloat(v.close),
-      }))
+      .map(
+        (v: { datetime: string; open: string; high: string; low: string; close: string; volume?: string }) => ({
+          date: v.datetime,
+          open: parseFloat(v.open),
+          high: parseFloat(v.high),
+          low: parseFloat(v.low),
+          close: parseFloat(v.close),
+          volume: v.volume ? parseInt(v.volume, 10) : null,
+        }),
+      )
       .reverse();
   } catch {
     return null;
   }
 }
 
-// Synthesizes plausible OHLC bars from the same close-price walk used
-// elsewhere for mock data, so the mock fallback looks like real candles
-// instead of a flat line — open/high/low are derived from that day's and
-// the prior day's close, not independently random.
-function mockOhlc(basePrice: number, seedKey: string, points = 30): OhlcPoint[] {
-  const closes = mockSeries(basePrice, seedKey, points);
-  return closes.map((point, i) => {
-    const prevClose = closes[i - 1]?.value ?? point.value;
+function intervalMinutes(interval: string): number | null {
+  if (interval.endsWith("min")) return parseInt(interval, 10);
+  if (interval.endsWith("h")) return parseInt(interval, 10) * 60;
+  return null; // daily+ intervals walk by calendar day instead
+}
+
+// Synthesizes plausible OHLC bars for the mock fallback — a close-price
+// random walk stepped at the same spacing as the real interval would be
+// (5/30 minutes for the 1D/1W timeframes, whole days otherwise), so a 1D
+// chart shows one trading session's worth of bars instead of accidentally
+// reusing the daily walk and rendering months of history under a "1D"
+// label. Volume is a plausible synthetic magnitude (larger on bigger
+// moves), clearly not real, but present so the volume indicator has
+// something to render in mock mode.
+function mockOhlc(basePrice: number, seedKey: string, interval: string, points = 30): OhlcPoint[] {
+  const stepMinutes = intervalMinutes(interval);
+  const timestamps: string[] = [];
+
+  if (stepMinutes) {
+    const now = new Date();
+    for (let i = points - 1; i >= 0; i--) {
+      const t = new Date(now.getTime() - i * stepMinutes * 60_000);
+      timestamps.push(t.toISOString().slice(0, 16).replace("T", " "));
+    }
+  } else {
+    for (let i = points - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      timestamps.push(d.toISOString().slice(0, 10));
+    }
+  }
+
+  let value = basePrice * 0.99;
+  let prevClose = value;
+  return timestamps.map((date) => {
+    const rand = seededRandom(`${seedKey}:${interval}:${date}`);
+    value = value * (1 + (rand - 0.5) * (stepMinutes ? 0.004 : 0.03));
     const open = prevClose;
-    const rangeSeed = seededRandom(`${seedKey}:range:${point.date}`);
-    const wick = Math.abs(point.value - open) * (0.3 + rangeSeed * 0.7) + point.value * 0.002;
+    const rangeSeed = seededRandom(`${seedKey}:${interval}:range:${date}`);
+    const wick = Math.abs(value - open) * (0.3 + rangeSeed * 0.7) + value * 0.002;
+    const volumeSeed = seededRandom(`${seedKey}:${interval}:volume:${date}`);
+    const moveSize = Math.abs(value - open) / open;
+    prevClose = value;
     return {
-      date: point.date,
+      date,
       open,
-      close: point.value,
-      high: Math.max(open, point.value) + wick,
-      low: Math.min(open, point.value) - wick,
+      close: value,
+      high: Math.max(open, value) + wick,
+      low: Math.min(open, value) - wick,
+      volume: Math.round((500_000 + volumeSeed * 2_000_000) * (1 + moveSize * 10)),
     };
   });
 }
@@ -182,8 +243,9 @@ function mockOhlc(basePrice: number, seedKey: string, points = 30): OhlcPoint[] 
 export async function getOhlcSeries(
   symbol: string,
   basePrice: number,
-  points = 30,
+  timeframe: ChartTimeframe = "3M",
 ): Promise<OhlcPoint[]> {
-  const real = await twelveDataOhlc(symbol, points);
-  return real ?? mockOhlc(basePrice, symbol, points);
+  const { interval, points } = TIMEFRAME_CONFIG[timeframe];
+  const real = await twelveDataOhlc(symbol, interval, points);
+  return real ?? mockOhlc(basePrice, symbol, interval, points);
 }

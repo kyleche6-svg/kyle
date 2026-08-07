@@ -330,7 +330,24 @@ export type InsiderGainer = {
 // groups are considered, and quotes are fetched once per unique ticker
 // among those — a real-time quote per distinct company in the whole
 // dataset would be far more API calls than this needs for a top-3 podium.
+// Recomputing this on every page view was the real cause of /insider-trading
+// taking 1-4+ seconds to load — up to 60 live quote fetches to Twelve Data,
+// every single request. A top-3 leaderboard doesn't need to be that fresh;
+// cached in-process for 15 minutes, same pattern as the Daily Brief cache.
+const GAINERS_CACHE_MS = 15 * 60 * 1000;
+let gainersCache: { computedAt: number; gainers: InsiderGainer[] } | null = null;
+
 export async function getTopInsiderGainers(limit = 3): Promise<InsiderGainer[]> {
+  if (gainersCache && Date.now() - gainersCache.computedAt < GAINERS_CACHE_MS) {
+    return gainersCache.gainers.slice(0, limit);
+  }
+
+  const gainers = await computeTopInsiderGainers();
+  gainersCache = { computedAt: Date.now(), gainers };
+  return gainers.slice(0, limit);
+}
+
+async function computeTopInsiderGainers(): Promise<InsiderGainer[]> {
   const rawBuys = await prisma.insiderTrade.findMany({
     where: { direction: "buy", pricePerShare: { not: null } },
     select: { ownerName: true, ticker: true, shares: true, pricePerShare: true },
@@ -384,7 +401,5 @@ export async function getTopInsiderGainers(limit = 3): Promise<InsiderGainer[]> 
     }
   }
 
-  return Array.from(byOwner.values())
-    .sort((a, b) => b.estimatedGainUsd - a.estimatedGainUsd)
-    .slice(0, limit);
+  return Array.from(byOwner.values()).sort((a, b) => b.estimatedGainUsd - a.estimatedGainUsd);
 }

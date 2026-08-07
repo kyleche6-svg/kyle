@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowSquareOut, TrendUp, TrendDown, Minus, Buildings, Users } from "@phosphor-icons/react/dist/ssr";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
-import { getQuote, getOhlcSeries } from "@/lib/market-data";
+import { getQuote, getSeries, getOhlcSeries } from "@/lib/market-data";
 import {
   getAnalystConsensus,
   getCompanyProfile,
@@ -15,7 +15,7 @@ import { searchStocks } from "@/lib/stock-search";
 import { getHistoricalReturnFrequency } from "@/lib/historical-stats";
 import { Panel } from "@/components/Panel";
 import { StatNumber } from "@/components/StatNumber";
-import { StockChart } from "@/components/StockChart";
+import { PriceChartToggle } from "@/components/PriceChartToggle";
 import { ReturnHistogram } from "@/components/ReturnHistogram";
 import { AddToWatchlistButton } from "@/components/AddToWatchlistButton";
 import { Disclaimer } from "@/components/Disclaimer";
@@ -79,10 +79,11 @@ export default async function StockDetailPage({
   const companyName = trending?.companyName ?? match?.companyName ?? ticker;
   const basePrice = trending?.basePrice ?? 100;
 
-  const [quote, ohlc, consensus, profile, earnings, stats, news, returnFrequency] =
+  const [quote, series, ohlc, consensus, profile, earnings, stats, news, returnFrequency] =
     await Promise.all([
       getQuote(ticker, companyName, basePrice),
-      getOhlcSeries(ticker, basePrice, "3M"),
+      getSeries(ticker, basePrice, 20),
+      getOhlcSeries(ticker, basePrice, 20),
       getAnalystConsensus(ticker, basePrice),
       getCompanyProfile(ticker, companyName),
       getEarnings(ticker),
@@ -142,7 +143,7 @@ export default async function StockDetailPage({
       </div>
 
       <Panel className="mt-4">
-        <StockChart ticker={ticker} initialOhlc={ohlc} />
+        <PriceChartToggle series={series} ohlc={ohlc} />
       </Panel>
 
       <Panel title="Key statistics" className="mt-4">

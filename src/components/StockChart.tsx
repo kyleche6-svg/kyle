@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import {
   Bar,
+  BarChart,
   ComposedChart,
   Line,
   ResponsiveContainer,
@@ -156,7 +157,7 @@ export function StockChart({ ticker, initialOhlc }: { ticker: string; initialOhl
       </div>
 
       <div className={isPending ? "opacity-50 transition-opacity" : "transition-opacity"}>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={showVolume && hasVolume ? 260 : 300}>
           <ComposedChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
             <XAxis
               dataKey="date"
@@ -164,15 +165,9 @@ export function StockChart({ ticker, initialOhlc }: { ticker: string; initialOhl
               axisLine={{ stroke: "var(--panel-border)" }}
               tickLine={false}
               interval="preserveStartEnd"
+              hide={showVolume && hasVolume}
             />
-            <YAxis yAxisId="price" domain={["auto", "auto"]} hide />
-            {showVolume && hasVolume && (
-              // Volume bars sit on their own axis scaled to a small fraction
-              // of the pane height, so they read as a strip along the
-              // bottom rather than dominating the price chart above them —
-              // the standard TradingView layout.
-              <YAxis yAxisId="volume" domain={[0, (dataMax: number) => dataMax * 5]} hide />
-            )}
+            <YAxis domain={["auto", "auto"]} hide />
             <Tooltip
               contentStyle={{
                 background: "var(--panel)",
@@ -183,21 +178,16 @@ export function StockChart({ ticker, initialOhlc }: { ticker: string; initialOhl
               labelStyle={{ color: "var(--muted)" }}
               itemStyle={{ color: "var(--foreground)" }}
               formatter={(value, name, item) => {
-                if (name === "volume") return [formatVolume(value as number), "Volume"];
                 if (name === "sma20") return [`$${(value as number).toFixed(2)}`, "SMA 20"];
                 if (name === "sma50") return [`$${(value as number).toFixed(2)}`, "SMA 50"];
                 const p = item.payload as OhlcPoint;
                 return [`O ${p.open.toFixed(2)}  H ${p.high.toFixed(2)}  L ${p.low.toFixed(2)}  C ${p.close.toFixed(2)}`, "Price"];
               }}
             />
-            {showVolume && hasVolume && (
-              <Bar yAxisId="volume" dataKey="volume" fill="var(--muted)" opacity={0.25} isAnimationActive={false} />
-            )}
             {chartType === "candles" ? (
-              <Bar yAxisId="price" dataKey="range" shape={CandleShape} isAnimationActive={false} />
+              <Bar dataKey="range" shape={CandleShape} isAnimationActive={false} />
             ) : (
               <Line
-                yAxisId="price"
                 type="monotone"
                 dataKey="close"
                 stroke="var(--accent)"
@@ -208,7 +198,6 @@ export function StockChart({ ticker, initialOhlc }: { ticker: string; initialOhl
             )}
             {showSma20 && (
               <Line
-                yAxisId="price"
                 type="monotone"
                 dataKey="sma20"
                 stroke="#eab308"
@@ -220,7 +209,6 @@ export function StockChart({ ticker, initialOhlc }: { ticker: string; initialOhl
             )}
             {showSma50 && (
               <Line
-                yAxisId="price"
                 type="monotone"
                 dataKey="sma50"
                 stroke="#a855f7"
@@ -232,6 +220,37 @@ export function StockChart({ ticker, initialOhlc }: { ticker: string; initialOhl
             )}
           </ComposedChart>
         </ResponsiveContainer>
+
+        {showVolume && hasVolume && (
+          // Its own panel underneath, not sharing the price chart's Bar
+          // layout — Recharts lays multiple sibling Bars out side by side
+          // per category by default, which was squeezing the candles down
+          // to a sliver when volume shared the same chart.
+          <ResponsiveContainer width="100%" height={60}>
+            <BarChart data={chartData} margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
+              <XAxis
+                dataKey="date"
+                tick={{ fill: "var(--muted)", fontSize: 11 }}
+                axisLine={{ stroke: "var(--panel-border)" }}
+                tickLine={false}
+                interval="preserveStartEnd"
+              />
+              <YAxis domain={[0, "auto"]} hide />
+              <Tooltip
+                contentStyle={{
+                  background: "var(--panel)",
+                  border: "1px solid var(--panel-border)",
+                  borderRadius: 6,
+                  fontSize: 12,
+                }}
+                labelStyle={{ color: "var(--muted)" }}
+                itemStyle={{ color: "var(--foreground)" }}
+                formatter={(value) => [formatVolume(value as number), "Volume"]}
+              />
+              <Bar dataKey="volume" fill="var(--muted)" opacity={0.5} isAnimationActive={false} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </div>
   );

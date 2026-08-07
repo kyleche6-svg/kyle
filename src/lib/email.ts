@@ -95,3 +95,40 @@ export async function sendVerificationEmail(email: string, verifyUrl: string) {
     `,
   });
 }
+
+export async function sendPriceAlertEmail(
+  email: string,
+  ticker: string,
+  direction: "above" | "below",
+  targetPrice: number,
+  currentPrice: number,
+) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const verb = direction === "above" ? "risen above" : "fallen below";
+
+  if (!apiKey) {
+    console.warn(
+      JSON.stringify({
+        event: "price_alert_email_not_configured",
+        message: "RESEND_API_KEY not set — logging alert instead of emailing it",
+        email,
+        ticker,
+        direction,
+        targetPrice,
+        currentPrice,
+      }),
+    );
+    return;
+  }
+
+  const resend = new Resend(apiKey);
+  await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL || "DollarWatch <onboarding@resend.dev>",
+    to: email,
+    subject: `${ticker} has ${verb} $${targetPrice.toFixed(2)}`,
+    html: `
+      <p><strong>${ticker}</strong> has ${verb} your target of $${targetPrice.toFixed(2)} — now trading at $${currentPrice.toFixed(2)}.</p>
+      <p>This is a price notification only, not a recommendation to buy or sell.</p>
+    `,
+  });
+}

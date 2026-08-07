@@ -3,10 +3,13 @@
 // SEC EDGAR's "latest filings" feed (free, no key). Same real-disclosure
 // category as the 13F data elsewhere in this app.
 import { prisma } from "@/lib/prisma";
+import { getQuote } from "@/lib/market-data";
+import { TRENDING_TICKERS } from "@/lib/stocks";
 
 const SEC_USER_AGENT = "DollarWatch research tool (contact: support@dollarwatch.app)";
 
 export type InsiderTrade = {
+  id: string;
   filedDate: string;
   ticker: string;
   issuerName: string;
@@ -102,6 +105,7 @@ async function fetchFilingDetail(cik: string, accessionNoDashes: string, filedDa
     const coded = TRANSACTION_CODE_LABELS[transactionCode];
 
     trades.push({
+      id: `${accessionNoDashes}-${trades.length}`,
       filedDate,
       ticker: ticker.toUpperCase(),
       issuerName,
@@ -176,6 +180,7 @@ export async function getInsiderTrades(limit = 200, ticker?: string): Promise<In
   }
 
   return rows.map((r) => ({
+    id: r.id,
     filedDate: r.filedDate.toISOString().slice(0, 10),
     ticker: r.ticker,
     issuerName: r.issuerName,
@@ -189,4 +194,197 @@ export async function getInsiderTrades(limit = 200, ticker?: string): Promise<In
     sharesOwnedAfter: r.sharesOwnedAfter,
     filingUrl: r.filingUrl,
   }));
+}
+
+function mapRow(r: {
+  id: string;
+  filedDate: Date;
+  ticker: string;
+  issuerName: string;
+  ownerName: string;
+  relationship: string;
+  transactionDate: Date;
+  transactionCode: string;
+  direction: InsiderTrade["direction"];
+  shares: number;
+  pricePerShare: number | null;
+  sharesOwnedAfter: number | null;
+  filingUrl: string;
+}): InsiderTrade {
+  return {
+    id: r.id,
+    filedDate: r.filedDate.toISOString().slice(0, 10),
+    ticker: r.ticker,
+    issuerName: r.issuerName,
+    ownerName: r.ownerName,
+    relationship: r.relationship,
+    transactionDate: r.transactionDate.toISOString().slice(0, 10),
+    transactionCode: r.transactionCode,
+    direction: r.direction,
+    shares: r.shares,
+    pricePerShare: r.pricePerShare,
+    sharesOwnedAfter: r.sharesOwnedAfter,
+    filingUrl: r.filingUrl,
+  };
+}
+
+export type InsiderTradePage = { trades: InsiderTrade[]; total: number };
+
+// Paginated + searchable — backs the insider-trading list page and its
+// "Load more" button. Search matches ticker or owner name, either as a
+// substring, so "cook" finds Tim Cook and "AAPL" finds Apple filings.
+export async function getInsiderTradesPage(
+  { limit = 15, offset = 0, search }: { limit?: number; offset?: number; search?: string } = {},
+): Promise<InsiderTradePage> {
+  const where = search
+    ? {
+        OR: [
+          { ticker: { equals: search.toUpperCase() } },
+          { ownerName: { contains: search, mode: "insensitive" as const } },
+          { issuerName: { contains: search, mode: "insensitive" as const } },
+        ],
+      }
+    : undefined;
+
+  const [rows, total] = await Promise.all([
+    prisma.insiderTrade.findMany({
+      where,
+      // id as a final tiebreaker — filedDate/transactionDate alone aren't
+      // unique (hundreds of filings share the same day), and skip/take
+      // pagination over a non-unique order isn't guaranteed stable across
+      // queries, which showed up live as duplicate rows across pages.
+      orderBy: [{ filedDate: "desc" }, { transactionDate: "desc" }, { id: "desc" }],
+      skip: offset,
+      take: limit,
+    }),
+    prisma.insiderTrade.count({ where }),
+  ]);
+
+  return { trades: rows.map(mapRow), total };
+}
+
+// One insider's full filing history — backs /insider-trading/[owner].
+export async function getOwnerTradesPage(
+  ownerName: string,
+  { limit = 15, offset = 0 }: { limit?: number; offset?: number } = {},
+): Promise<InsiderTradePage> {
+  const where = { ownerName };
+  const [rows, total] = await Promise.all([
+    prisma.insiderTrade.findMany({
+      where,
+      orderBy: [{ transactionDate: "desc" }, { id: "desc" }],
+      skip: offset,
+      take: limit,
+    }),
+    prisma.insiderTrade.count({ where }),
+  ]);
+  return { trades: rows.map(mapRow), total };
+}
+
+export type OwnerHolding = {
+  ticker: string;
+  issuerName: string;
+  sharesOwnedAfter: number;
+  asOfDate: string;
+};
+
+// "What are they holding" — the most recent sharesOwnedAfter this insider
+// reported for each company they've filed on. This is exactly what SEC
+// Form 4 discloses (ownership after the transaction), not a live brokerage
+// balance — it's only as current as their last filing.
+export async function getOwnerHoldings(ownerName: string): Promise<OwnerHolding[]> {
+  const rows = await prisma.insiderTrade.findMany({
+    where: { ownerName, sharesOwnedAfter: { not: null } },
+    orderBy: [{ transactionDate: "desc" }],
+    select: { ticker: true, issuerName: true, sharesOwnedAfter: true, transactionDate: true },
+  });
+
+  const latestByTicker = new Map<string, OwnerHolding>();
+  for (const r of rows) {
+    if (latestByTicker.has(r.ticker)) continue; // already have a more recent row (desc order)
+    latestByTicker.set(r.ticker, {
+      ticker: r.ticker,
+      issuerName: r.issuerName,
+      sharesOwnedAfter: r.sharesOwnedAfter!,
+      asOfDate: r.transactionDate.toISOString().slice(0, 10),
+    });
+  }
+  return Array.from(latestByTicker.values());
+}
+
+export type InsiderGainer = {
+  ownerName: string;
+  estimatedGainUsd: number;
+  totalSharesBought: number;
+  tickers: string[];
+};
+
+// "Who's making the most money" — a real, backward-looking calculation,
+// not a signal: current market value of shares an insider actually bought
+// (real reported purchase price, per Form 4) minus what they paid, summed
+// across their reported buys. Same category as the return-distribution
+// stats on stock pages — arithmetic on real historical data, not a claim
+// about anyone's actual realized profit (we don't know if/when they sold).
+//
+// Bounded for cost: only the highest-dollar-value (owner, ticker) buy
+// groups are considered, and quotes are fetched once per unique ticker
+// among those — a real-time quote per distinct company in the whole
+// dataset would be far more API calls than this needs for a top-3 podium.
+export async function getTopInsiderGainers(limit = 3): Promise<InsiderGainer[]> {
+  const rawBuys = await prisma.insiderTrade.findMany({
+    where: { direction: "buy", pricePerShare: { not: null } },
+    select: { ownerName: true, ticker: true, shares: true, pricePerShare: true },
+  });
+
+  const groups = new Map<string, { ownerName: string; ticker: string; shares: number; cost: number }>();
+  for (const b of rawBuys) {
+    const key = `${b.ownerName}::${b.ticker}`;
+    const existing = groups.get(key);
+    const cost = b.shares * b.pricePerShare!;
+    if (existing) {
+      existing.shares += b.shares;
+      existing.cost += cost;
+    } else {
+      groups.set(key, { ownerName: b.ownerName, ticker: b.ticker, shares: b.shares, cost });
+    }
+  }
+
+  const topGroups = Array.from(groups.values())
+    .sort((a, b) => b.cost - a.cost)
+    .slice(0, 60);
+
+  const uniqueTickers = Array.from(new Set(topGroups.map((g) => g.ticker)));
+  const quotes = await Promise.all(
+    uniqueTickers.map(async (ticker) => {
+      const trending = TRENDING_TICKERS.find((t) => t.ticker === ticker);
+      const quote = await getQuote(ticker, trending?.companyName ?? ticker, trending?.basePrice ?? 100);
+      return [ticker, quote.price] as const;
+    }),
+  );
+  const priceByTicker = new Map(quotes);
+
+  const byOwner = new Map<string, InsiderGainer>();
+  for (const g of topGroups) {
+    const currentPrice = priceByTicker.get(g.ticker);
+    if (currentPrice === undefined) continue;
+    const gain = g.shares * currentPrice - g.cost;
+
+    const existing = byOwner.get(g.ownerName);
+    if (existing) {
+      existing.estimatedGainUsd += gain;
+      existing.totalSharesBought += g.shares;
+      if (!existing.tickers.includes(g.ticker)) existing.tickers.push(g.ticker);
+    } else {
+      byOwner.set(g.ownerName, {
+        ownerName: g.ownerName,
+        estimatedGainUsd: gain,
+        totalSharesBought: g.shares,
+        tickers: [g.ticker],
+      });
+    }
+  }
+
+  return Array.from(byOwner.values())
+    .sort((a, b) => b.estimatedGainUsd - a.estimatedGainUsd)
+    .slice(0, limit);
 }

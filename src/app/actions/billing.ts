@@ -2,10 +2,27 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { auth, signOut } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { checkGeneralLimit } from "@/lib/rate-limit";
+
+// JWT sessions have no server-side revocation, so a session can outlive
+// its User row (account deleted from another device/tab, a stale cookie
+// from before a DB reset, etc.) — session.user.id would then look valid
+// but reference nothing. Reads (findUnique by that id) just return null,
+// harmless, but a *write* that creates a new row with that id as a foreign
+// key — like the Subscription upsert below — hits a real FK constraint
+// violation and crashes. Confirmed this is exactly what was happening:
+// checking existence first turns that crash into a clean re-login instead.
+async function requireExistingUser(userId: string, email: string) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    await signOut({ redirect: false });
+    redirect("/login?session=expired");
+  }
+  return { id: userId, email };
+}
 
 async function getOrigin() {
   const headerList = await headers();
@@ -30,7 +47,8 @@ export async function createCheckoutSession(formData: FormData) {
     redirect("/login");
   }
 
-  await enforceGeneralLimit(session.user.id, "checkout");
+  const user = await requireExistingUser(session.user.id, session.user.email);
+  await enforceGeneralLimit(user.id, "checkout");
 
   const plan = formData.get("plan") === "yearly" ? "yearly" : "monthly";
   const priceId =
@@ -44,20 +62,20 @@ export async function createCheckoutSession(formData: FormData) {
   }
 
   let existing = await prisma.subscription.findUnique({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
   });
 
   let stripeCustomerId = existing?.stripeCustomerId ?? undefined;
   if (!stripeCustomerId) {
     const customer = await stripe.customers.create({
-      email: session.user.email,
-      metadata: { userId: session.user.id },
+      email: user.email,
+      metadata: { userId: user.id },
     });
     stripeCustomerId = customer.id;
 
     existing = await prisma.subscription.upsert({
-      where: { userId: session.user.id },
-      create: { userId: session.user.id, stripeCustomerId },
+      where: { userId: user.id },
+      create: { userId: user.id, stripeCustomerId },
       update: { stripeCustomerId },
     });
   }
@@ -81,14 +99,15 @@ export async function createCheckoutSession(formData: FormData) {
 
 export async function createPortalSession() {
   const session = await auth();
-  if (!session?.user?.id) {
+  if (!session?.user?.id || !session.user.email) {
     redirect("/login");
   }
 
-  await enforceGeneralLimit(session.user.id, "portal");
+  const user = await requireExistingUser(session.user.id, session.user.email);
+  await enforceGeneralLimit(user.id, "portal");
 
   const subscription = await prisma.subscription.findUnique({
-    where: { userId: session.user.id },
+    where: { userId: user.id },
   });
 
   if (!subscription?.stripeCustomerId) {

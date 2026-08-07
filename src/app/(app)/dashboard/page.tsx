@@ -69,7 +69,7 @@ export default async function DashboardPage() {
       <div className="mt-6 flex items-baseline justify-between">
         <h2 className="text-lg font-medium">Economic Calendar</h2>
         <p className="text-xs text-muted">
-          Real releases from official statistical agencies, via Financial Modeling Prep.
+          Real U.S. releases and their official publication dates, via the Federal Reserve's FRED API.
         </p>
       </div>
       <Panel className="animate-rise-in mt-3">

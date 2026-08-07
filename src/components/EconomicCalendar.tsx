@@ -25,7 +25,7 @@ export function EconomicCalendar({ events }: { events: EconomicEvent[] }) {
   if (events.length === 0) {
     return (
       <p className="py-4 text-sm text-muted">
-        No economic calendar data available right now — set FMP_API_KEY to enable this feed.
+        No economic calendar data available right now — set FRED_API_KEY to enable this feed.
       </p>
     );
   }

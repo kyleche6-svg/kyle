@@ -107,21 +107,21 @@ body {
   animation: podium-pull-up 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-/* Endless upward-climbing background — the content is rendered twice,
-   stacked, and this scrolls exactly one copy's height (50% of the
-   doubled-height wrapper) so the loop point is seamless: a 24/7 rising
-   feed, not a still image. */
-@keyframes conveyor-up {
+/* Endless side-to-side drifting background — the content is rendered
+   twice, side by side, and this scrolls exactly one copy's width (50% of
+   the doubled-width wrapper) so the loop point is seamless: a 24/7
+   drifting feed, not a still image. */
+@keyframes conveyor-left {
   from {
-    transform: translateY(0);
+    transform: translateX(0);
   }
   to {
-    transform: translateY(-50%);
+    transform: translateX(-50%);
   }
 }
 
-.animate-conveyor-up {
-  animation: conveyor-up 18s linear infinite;
+.animate-conveyor-left {
+  animation: conveyor-left 24s linear infinite;
 }
 
 /* Individual bars pulse their own height independently (grows/shrinks from

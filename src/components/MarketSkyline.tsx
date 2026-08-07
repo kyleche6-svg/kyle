@@ -9,9 +9,10 @@
 //  1. Each bar's own height pulses independently (CSS scaleY,
 //     transform-origin pinned to the baseline) on staggered timing, so it
 //     reads like a live ticking chart rather than a picture.
-//  2. The whole skyline climbs upward forever — content is rendered twice,
-//     stacked, and the wrapper scrolls up by exactly one copy's height on
-//     a linear loop, so the loop point is invisible: a 24/7 rising feed.
+//  2. The whole skyline drifts sideways forever — content is rendered
+//     twice, side by side, and the wrapper scrolls left by exactly one
+//     copy's width on a linear loop, so the loop point is invisible: a
+//     24/7 drifting feed.
 const BAR_HEIGHTS = [40, 55, 48, 70, 62, 88, 78, 105, 96, 130, 118, 155, 142, 175];
 
 function SkylineSvg() {
@@ -68,11 +69,11 @@ export function MarketSkyline() {
       className="pointer-events-none absolute inset-0 h-full w-full overflow-hidden opacity-[0.16]"
       aria-hidden="true"
     >
-      <div className="animate-conveyor-up flex h-[200%] w-full flex-col">
-        <div className="h-1/2 w-full">
+      <div className="animate-conveyor-left flex h-full w-[200%] flex-row">
+        <div className="h-full w-1/2">
           <SkylineSvg />
         </div>
-        <div className="h-1/2 w-full">
+        <div className="h-full w-1/2">
           <SkylineSvg />
         </div>
       </div>

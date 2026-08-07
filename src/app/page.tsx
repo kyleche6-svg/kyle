@@ -12,6 +12,9 @@ import {
 import { Panel } from "@/components/Panel";
 import { StatNumber } from "@/components/StatNumber";
 import { MarketSkyline } from "@/components/MarketSkyline";
+import { RotatingWord } from "@/components/RotatingWord";
+
+const ROTATING_WORDS = ["USD strength", "insider filings", "institutional holdings", "analyst consensus"];
 
 const scatteredTabs = [
   { icon: ChartLineUp, label: "Terminal feed", rotate: "-rotate-3" },
@@ -51,15 +54,26 @@ export default function Home() {
           aria-hidden="true"
         />
         <MarketSkyline />
+        <div
+          className="pointer-events-none absolute inset-0 opacity-60"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at center, rgba(255,255,255,0.035) 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
+          }}
+          aria-hidden="true"
+        />
         <div className="relative mx-auto max-w-6xl px-6 pt-14 pb-4">
           <div className="max-w-2xl">
+            <div className="animate-rise-in mb-6 inline-flex items-center gap-2 rounded-full border border-panel-border bg-panel/60 px-3 py-1 text-xs font-medium tracking-wide text-muted uppercase backdrop-blur-sm">
+              Real data, always attributed — not financial advice
+            </div>
             <h1 className="animate-sprint-in-left text-4xl font-semibold tracking-tight">
               Terminal-grade market intelligence. Self-serve pricing.
             </h1>
             <p className="animate-sprint-in-right mt-4 text-lg text-muted">
-              USD strength, insider trading disclosures, and institutional
-              holdings — correlated in one desk, without the enterprise
-              contract.
+              Real-time <RotatingWord words={ROTATING_WORDS} /> — correlated
+              in one desk, without the enterprise contract.
             </p>
             <div className="mt-8 flex gap-3">
               <Link
@@ -74,6 +88,17 @@ export default function Home() {
               >
                 Create account
               </Link>
+            </div>
+            <div className="stagger-children mt-10 flex flex-wrap gap-3 text-xs font-medium tracking-wide text-muted uppercase">
+              <span className="rounded-md border border-panel-border bg-panel/60 px-3 py-1.5">
+                Every SEC Form 4, daily
+              </span>
+              <span className="rounded-md border border-panel-border bg-panel/60 px-3 py-1.5">
+                Real 13F institutional data
+              </span>
+              <span className="rounded-md border border-panel-border bg-panel/60 px-3 py-1.5">
+                No predictions, ever
+              </span>
             </div>
           </div>
         </div>

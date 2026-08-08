@@ -3,12 +3,13 @@ import { requireActiveSubscription } from "@/lib/subscription-guard";
 import { getStockList, getCompanyProfile, TRENDING_TICKERS } from "@/lib/stocks";
 import { Panel } from "@/components/Panel";
 import { Disclaimer } from "@/components/Disclaimer";
+import { HeatmapOrbit } from "@/components/HeatmapOrbit";
 
 function heatColor(changePercent: number): string {
   const clamped = Math.max(-3, Math.min(3, changePercent));
   const intensity = Math.abs(clamped) / 3;
-  const color = clamped >= 0 ? "34,197,94" : "239,68,68"; // positive / negative rgb
-  return `rgba(${color}, ${0.12 + intensity * 0.45})`;
+  const color = clamped >= 0 ? "16,230,110" : "255,55,55"; // positive / negative rgb
+  return `rgba(${color}, ${0.3 + intensity * 0.55})`;
 }
 
 export default async function HeatmapPage() {
@@ -42,10 +43,18 @@ export default async function HeatmapPage() {
     <div className="mx-auto max-w-6xl px-6 py-8">
       <h1 className="text-2xl font-semibold">Sector Heatmap</h1>
       <p className="mt-1 text-sm text-muted">
-        Today&apos;s movers grouped by sector — real quotes, colored by change percent.
+        Today&apos;s movers — real quotes, sized and colored by change percent. Hover to still it,
+        click any ticker.
       </p>
 
-      <div className="stagger-children mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <Panel className="mt-6">
+        <HeatmapOrbit
+          stocks={stocks.map((s) => ({ ticker: s.ticker, changePercent: s.quote.changePercent }))}
+        />
+      </Panel>
+
+      <h2 className="mt-8 text-lg font-medium">By sector</h2>
+      <div className="stagger-children mt-3 grid grid-cols-1 gap-4 lg:grid-cols-2">
         {sectors.map((s) => (
           <Panel key={s.sector}>
             <div className="mb-3 flex items-center justify-between">

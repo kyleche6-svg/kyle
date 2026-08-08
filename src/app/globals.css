@@ -196,3 +196,16 @@ body {
 .stagger-children > *:nth-child(6) { animation-delay: 200ms; }
 .stagger-children > *:nth-child(7) { animation-delay: 240ms; }
 .stagger-children > *:nth-child(n + 8) { animation-delay: 280ms; }
+
+/* Gentle continuous bounce for the "Right now" scattered tabs — small
+   vertical hop, each tile offset on its own timer so they don't bob in
+   unison. */
+@keyframes gentle-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-gentle-bounce {
+  animation: gentle-bounce 1.8s ease-in-out infinite;
+}
+

@@ -25,7 +25,6 @@ model User {
   twoFactorChallenges     TwoFactorChallenge[]
   watchlistItems          WatchlistItem[]
   priceAlerts             PriceAlert[]
-  portfolioHoldings       PortfolioHolding[]
 }
 
 model WatchlistItem {
@@ -57,18 +56,6 @@ model PriceAlert {
 
   @@index([userId])
   @@index([ticker])
-}
-
-model PortfolioHolding {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ticker    String
-  shares    Float
-  costBasis Float // price per share at purchase, entered by the user
-  createdAt DateTime @default(now())
-
-  @@index([userId])
 }
 
 model PasswordResetToken {

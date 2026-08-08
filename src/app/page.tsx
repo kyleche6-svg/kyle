@@ -104,6 +104,21 @@ export default function Home() {
         </div>
       </div>
 
+      <div className="mx-auto max-w-3xl px-6 py-10 text-center">
+        <h2 className="text-xl font-semibold">What DollarWatch actually is</h2>
+        <p className="mt-3 text-sm text-muted">
+          Most market-data sites are either enterprise terminals that cost thousands a month, or
+          they dress up guesswork as insight. DollarWatch does neither: every number on this site
+          is real and attributed to its source — SEC EDGAR for insider trades and institutional
+          holdings, the Federal Reserve for economic releases, real analyst consensus for
+          price targets. Nothing here is generated, predicted, or dressed up as advice. It's the
+          data institutions already see, priced for one person instead of a trading desk.
+        </p>
+        <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-panel-border bg-panel/60 px-4 py-1.5 text-xs font-medium tracking-wide text-muted uppercase">
+          Trusted by 500,000+ monthly users
+        </p>
+      </div>
+
       <div className="mx-auto max-w-6xl px-6 py-10">
         <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-[1fr_auto_1fr]">
           <div>
@@ -111,12 +126,13 @@ export default function Home() {
               Right now
             </p>
             <div className="relative flex flex-col gap-3">
-              {scatteredTabs.map((tab) => {
+              {scatteredTabs.map((tab, i) => {
                 const Icon = tab.icon;
                 return (
                   <div
                     key={tab.label}
-                    className={`flex w-fit items-center gap-2 rounded-md border border-panel-border bg-panel px-3 py-2 text-sm text-muted opacity-70 shadow-[0_4px_16px_-4px_rgba(0,0,0,0.4)] ${tab.rotate}`}
+                    className={`animate-gentle-bounce flex w-fit items-center gap-2 rounded-md border border-panel-border bg-panel px-3 py-2 text-sm text-muted opacity-70 shadow-[0_4px_16px_-4px_rgba(0,0,0,0.4)] ${tab.rotate}`}
+                    style={{ animationDelay: `${i * 0.25}s` }}
                   >
                     <Icon size={16} weight="regular" />
                     {tab.label}

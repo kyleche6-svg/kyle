@@ -8,7 +8,6 @@ import {
   Trophy,
   Newspaper,
   Star,
-  Briefcase,
 } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/lib/auth";
 import { Logo } from "@/components/Logo";
@@ -18,7 +17,6 @@ const links = [
   { href: "/briefing", label: "Daily Brief", icon: Newspaper },
   { href: "/stocks", label: "Stocks", icon: TrendUp },
   { href: "/watchlist", label: "Watchlist", icon: Star },
-  { href: "/portfolio", label: "Portfolio", icon: Briefcase },
   { href: "/top-traders", label: "Top Traders", icon: Trophy },
   { href: "/insider-trading", label: "Insider Trading", icon: UserFocus },
   { href: "/pricing", label: "Pricing", icon: Tag },

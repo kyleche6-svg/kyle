@@ -3,6 +3,7 @@ import { CURRENCY_PAIRS, COMMODITIES, getQuote } from "@/lib/market-data";
 import { getEconomicEvents } from "@/lib/economic-calendar";
 import { getStockList } from "@/lib/stocks";
 import { getInsiderTrades } from "@/lib/insider-trading";
+import { prisma } from "@/lib/prisma";
 
 export type DailyBrief = {
   dateLabel: string;
@@ -13,10 +14,12 @@ export type DailyBrief = {
 
 // One generation per UTC calendar day, shared across every visitor — this
 // writes real prose from an LLM, so unlike everything else in this app it
-// costs money per generation. Caching by date, not by request, keeps that
-// to at most one Groq call/day regardless of traffic.
-let cache: { dateKey: string; brief: DailyBrief } | null = null;
-
+// costs money (and burns a daily token quota) per generation. Persisted
+// in the database, not a module-level variable: on Vercel each
+// serverless cold start gets its own process memory, so an in-memory
+// cache alone doesn't stop concurrent/repeated cold starts from each
+// re-generating — this previously exhausted the Groq free-tier daily
+// token limit well before the day was over.
 function todayKey(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -99,81 +102,92 @@ Hard rules, no exceptions:
 - Write in a clear, professional news-desk tone — factual and readable, not hype, not clickbait.
 - Return strict JSON: {"headline": string, "sections": [{"heading": string, "body": string}]}. Produce 4-5 sections covering: currency/commodity moves, today's economic calendar, notable stock movers, and recent insider trading filings. Each body should be 2-4 sentences of plain prose, not a bullet list.`;
 
-async function generateBrief(): Promise<DailyBrief> {
-  const dateLabel = new Date().toLocaleDateString(undefined, {
+function dateLabel(): string {
+  return new Date().toLocaleDateString(undefined, {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
   });
+}
+
+function unavailableBrief(headline: string, heading: string, body: string): DailyBrief {
+  return { dateLabel: dateLabel(), headline, sections: [{ heading, body }], generatedAt: new Date().toISOString() };
+}
+
+// Throws on any failure instead of returning a fallback — the fallback
+// is decided by the caller, which also decides whether the result is
+// worth persisting (a real generation is; a rate-limit/config failure
+// is not, so the next request can retry instead of being stuck with
+// today's failure cached for the rest of the day).
+async function generateBrief(): Promise<DailyBrief> {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) throw new Error("GROQ_API_KEY not configured");
 
   const data = await gatherMarketData();
   const summary = buildDataSummary(data);
 
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
-    return {
-      dateLabel,
-      headline: "Daily brief unavailable",
-      sections: [
-        {
-          heading: "Not configured",
-          body: "The daily market brief needs GROQ_API_KEY set to generate — see the other market data pages for live figures in the meantime.",
-        },
-      ],
-      generatedAt: new Date().toISOString(),
-    };
-  }
+  const client = new Groq({ apiKey });
+  const response = await client.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    max_tokens: 1400,
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: `Today's data:\n\n${summary}` },
+    ],
+    response_format: { type: "json_object" },
+  });
 
-  try {
-    const client = new Groq({ apiKey });
-    const response = await client.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
-      max_tokens: 1400,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: `Today's data:\n\n${summary}` },
-      ],
-      response_format: { type: "json_object" },
-    });
+  const text = response.choices[0]?.message?.content;
+  if (!text) throw new Error("empty response");
 
-    const text = response.choices[0]?.message?.content;
-    if (!text) throw new Error("empty response");
+  const parsed = JSON.parse(text);
+  const sections = Array.isArray(parsed.sections) ? parsed.sections : [];
 
-    const parsed = JSON.parse(text);
-    const sections = Array.isArray(parsed.sections) ? parsed.sections : [];
-
-    return {
-      dateLabel,
-      headline: typeof parsed.headline === "string" ? parsed.headline : "Daily Market Brief",
-      sections: sections.filter(
-        (s: unknown): s is { heading: string; body: string } =>
-          typeof (s as { heading?: unknown })?.heading === "string" &&
-          typeof (s as { body?: unknown })?.body === "string",
-      ),
-      generatedAt: new Date().toISOString(),
-    };
-  } catch (err) {
-    console.error("daily brief generation failed", err);
-    return {
-      dateLabel,
-      headline: "Daily brief temporarily unavailable",
-      sections: [
-        {
-          heading: "Generation failed",
-          body: "Couldn't generate today's brief — try again shortly, or check the other market data pages for live figures.",
-        },
-      ],
-      generatedAt: new Date().toISOString(),
-    };
-  }
+  return {
+    dateLabel: dateLabel(),
+    headline: typeof parsed.headline === "string" ? parsed.headline : "Daily Market Brief",
+    sections: sections.filter(
+      (s: unknown): s is { heading: string; body: string } =>
+        typeof (s as { heading?: unknown })?.heading === "string" &&
+        typeof (s as { body?: unknown })?.body === "string",
+    ),
+    generatedAt: new Date().toISOString(),
+  };
 }
 
 export async function getDailyBrief(): Promise<DailyBrief> {
   const key = todayKey();
-  if (cache && cache.dateKey === key) return cache.brief;
 
-  const brief = await generateBrief();
-  cache = { dateKey: key, brief };
+  const cached = await prisma.dailyBriefCache.findUnique({ where: { dateKey: key } }).catch(() => null);
+  if (cached) {
+    return {
+      dateLabel: dateLabel(),
+      headline: cached.headline,
+      sections: cached.sections as { heading: string; body: string }[],
+      generatedAt: cached.generatedAt.toISOString(),
+    };
+  }
+
+  let brief: DailyBrief;
+  try {
+    brief = await generateBrief();
+  } catch (err) {
+    console.error("daily brief generation failed", err);
+    return unavailableBrief(
+      "Daily brief temporarily unavailable",
+      "Generation failed",
+      "Couldn't generate today's brief — try again shortly, or check the other market data pages for live figures.",
+    );
+  }
+
+  await prisma.dailyBriefCache
+    .upsert({
+      where: { dateKey: key },
+      create: { dateKey: key, headline: brief.headline, sections: brief.sections, generatedAt: new Date(brief.generatedAt) },
+      update: { headline: brief.headline, sections: brief.sections, generatedAt: new Date(brief.generatedAt) },
+    })
+    .catch((err) => console.error("failed to persist daily brief", err));
+
   return brief;
 }

@@ -9,6 +9,18 @@ datasource db {
   provider = "postgresql"
 }
 
+// Persists the generated daily brief across serverless invocations — a
+// plain in-memory cache doesn't hold on Vercel, since each cold start
+// gets its own process memory, which was silently burning through the
+// Groq free-tier daily token quota by re-generating on every cold start
+// instead of once per day.
+model DailyBriefCache {
+  dateKey     String   @id
+  headline    String
+  sections    Json
+  generatedAt DateTime
+}
+
 model User {
   id                      String                   @id @default(cuid())
   email                   String                   @unique

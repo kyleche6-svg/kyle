@@ -27,6 +27,7 @@ export function GainersPodium({ stocks }: { stocks: PodiumStock[] }) {
           <Link
             key={stock.ticker}
             href={`/stocks/${stock.ticker}`}
+            prefetch={false}
             className={`${place.order} group/podium flex w-1/3 flex-col items-center transition-transform duration-300 hover:-translate-y-1`}
           >
             <Trophy

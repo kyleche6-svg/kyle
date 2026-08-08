@@ -141,7 +141,7 @@ export default async function TopTraderDetailPage({ params }: { params: Promise<
               <div key={holding.cusip} className="border-b border-panel-border/50 pb-4 last:border-0 last:pb-0">
                 <div className="flex items-center justify-between">
                   {resolved ? (
-                    <Link href={`/stocks/${resolved.ticker}`} className="font-medium hover:text-accent">
+                    <Link href={`/stocks/${resolved.ticker}`} prefetch={false} className="font-medium hover:text-accent">
                       {holding.issuer} <span className="font-mono text-xs text-muted">({resolved.ticker})</span>
                     </Link>
                   ) : (

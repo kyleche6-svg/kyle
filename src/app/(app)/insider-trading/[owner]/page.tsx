@@ -51,6 +51,7 @@ export default async function InsiderOwnerPage({
               <Link
                 key={h.ticker}
                 href={`/stocks/${h.ticker}`}
+                prefetch={false}
                 className="rounded-md border border-panel-border p-3 transition-colors hover:border-accent/40"
               >
                 <p className="font-mono text-sm font-medium">{h.ticker}</p>

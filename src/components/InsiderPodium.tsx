@@ -29,6 +29,7 @@ export function InsiderPodium({ gainers }: { gainers: InsiderGainer[] }) {
             <Link
               key={gainer.ownerName}
               href={`/insider-trading/${encodeURIComponent(gainer.ownerName)}`}
+              prefetch={false}
               className={`${place.order} group/podium flex w-1/3 flex-col items-center transition-transform duration-300 hover:-translate-y-1`}
             >
               <Trophy

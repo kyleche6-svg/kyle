@@ -65,7 +65,7 @@ export default async function WatchlistPage() {
                   return (
                     <tr key={item.id} className="border-b border-panel-border/50">
                       <td className="py-2.5 pr-4 font-mono font-medium">
-                        <Link href={`/stocks/${item.ticker}`} className="hover:text-accent">
+                        <Link href={`/stocks/${item.ticker}`} prefetch={false} className="hover:text-accent">
                           {item.ticker}
                         </Link>
                       </td>

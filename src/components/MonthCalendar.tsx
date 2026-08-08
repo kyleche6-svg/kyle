@@ -107,6 +107,7 @@ export function MonthCalendar({
                   <Link
                     key={`${e.ticker}-${idx}`}
                     href={`/stocks/${e.ticker}`}
+                    prefetch={false}
                     className={`block truncate rounded border px-1 py-0.5 text-[10px] font-medium ${TONE_CLASS[e.tone ?? "muted"]}`}
                     title={`${e.ticker} — ${e.primary}${e.secondary ? ` (${e.secondary})` : ""}`}
                   >

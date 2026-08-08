@@ -60,13 +60,14 @@ export function InsiderTradeTable({
             {trades.map((trade) => (
               <tr key={trade.id} className="border-b border-panel-border/50">
                 <td className="py-2 pr-4 font-mono font-medium">
-                  <Link href={`/stocks/${trade.ticker}`} className="hover:text-accent">
+                  <Link href={`/stocks/${trade.ticker}`} prefetch={false} className="hover:text-accent">
                     {trade.ticker}
                   </Link>
                 </td>
                 <td className="py-2 pr-4">
                   <Link
                     href={`/insider-trading/${encodeURIComponent(trade.ownerName)}`}
+                    prefetch={false}
                     className="hover:text-accent"
                   >
                     {trade.ownerName}

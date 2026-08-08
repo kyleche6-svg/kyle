@@ -134,6 +134,7 @@ export default async function StocksPage({
                 <Link
                   key={stock.ticker}
                   href={`/stocks/${stock.ticker}`}
+                  prefetch={false}
                   className="flex items-center justify-between text-sm transition-colors hover:text-accent"
                 >
                   <span className="font-mono font-medium">{stock.ticker}</span>
@@ -154,6 +155,7 @@ export default async function StocksPage({
                 <Link
                   key={stock.ticker}
                   href={`/stocks/${stock.ticker}`}
+                  prefetch={false}
                   className="flex items-center justify-between text-sm transition-colors hover:text-accent"
                 >
                   <span className="font-mono font-medium">{stock.ticker}</span>
@@ -194,7 +196,7 @@ export default async function StocksPage({
                   return (
                     <tr key={stock.ticker} className="border-b border-panel-border/50">
                       <td className="py-2.5 pr-4 font-mono font-medium">
-                        <Link href={`/stocks/${stock.ticker}`} className="hover:text-accent">
+                        <Link href={`/stocks/${stock.ticker}`} prefetch={false} className="hover:text-accent">
                           {stock.ticker}
                         </Link>
                       </td>

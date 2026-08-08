@@ -71,6 +71,7 @@ export default async function HeatmapPage() {
                 <Link
                   key={t.ticker}
                   href={`/stocks/${t.ticker}`}
+                  prefetch={false}
                   className="rounded-md border border-panel-border p-2.5 transition-transform hover:-translate-y-0.5"
                   style={{ backgroundColor: heatColor(t.changePercent) }}
                 >

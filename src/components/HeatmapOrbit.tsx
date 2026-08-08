@@ -109,6 +109,7 @@ export function HeatmapOrbit({ stocks }: { stocks: OrbitStock[] }) {
               tileRefs.current[i] = el;
             }}
             href={`/stocks/${stock.ticker}`}
+            prefetch={false}
             onMouseEnter={() => {
               hoveredRef.current = i;
             }}

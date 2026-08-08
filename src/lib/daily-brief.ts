@@ -153,7 +153,8 @@ async function generateBrief(): Promise<DailyBrief> {
       ),
       generatedAt: new Date().toISOString(),
     };
-  } catch {
+  } catch (err) {
+    console.error("daily brief generation failed", err);
     return {
       dateLabel,
       headline: "Daily brief temporarily unavailable",

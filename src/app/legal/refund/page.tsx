@@ -20,8 +20,8 @@ export default function RefundPage() {
           <h2 className="mb-2 text-foreground">Refunds</h2>
           <p>
             If you were charged in error, charged after you believed you&apos;d already canceled,
-            or are unhappy with your purchase within 7 days of the charge, contact support and
-            you&apos;ll get a full refund — no questions asked. After 7 days, refunds are handled
+            or are unhappy with your purchase within 1 day of the charge, contact support and
+            you&apos;ll get a full refund — no questions asked. After 1 day, refunds are handled
             case by case.
           </p>
         </section>

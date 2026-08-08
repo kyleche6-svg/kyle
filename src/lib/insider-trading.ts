@@ -260,6 +260,19 @@ export async function getInsiderTradesPage(
     prisma.insiderTrade.count({ where }),
   ]);
 
+  // Empty DB table (backfill never run against this database, e.g. a
+  // freshly provisioned production DB) — fall back to SEC's live feed
+  // rather than showing an empty page. Only for the first, unfiltered
+  // page: the live feed can't be searched or paginated the same way, and
+  // an empty *filtered* result (a real "no matches") must stay empty.
+  if (total === 0 && !search && offset === 0) {
+    const totalRows = await prisma.insiderTrade.count();
+    if (totalRows === 0) {
+      const live = await getRecentInsiderTrades(limit);
+      return { trades: live, total: live.length };
+    }
+  }
+
   return { trades: rows.map(mapRow), total };
 }
 

@@ -82,7 +82,29 @@ function parseInfoTable(xml: string): { issuer: string; cusip: string; value: nu
     .filter((row): row is { issuer: string; cusip: string; value: number } => row !== null);
 }
 
+// Next's fetch cache silently refuses to store responses over 2MB (real
+// 13F infoTable XML routinely exceeds that — Citadel's is ~10MB) — the
+// `next: { revalidate }` on secText() below does nothing for those, so
+// every page view was re-downloading the full multi-MB filing from SEC
+// from scratch. This app-level cache wraps the *parsed* (small) result
+// instead, which has no such size ceiling. 13F filings only update
+// quarterly, so the 6h TTL here is already generous, not a freshness cut.
+const PORTFOLIO_CACHE_MS = 6 * 60 * 60 * 1000;
+const portfolioCache = new Map<string, { computedAt: number; portfolio: FundPortfolio }>();
+
 async function fetchLatestPortfolio(fund: FundRef, holdingsLimit = 10): Promise<FundPortfolio> {
+  const cacheKey = `${fund.cik}:${holdingsLimit}`;
+  const cached = portfolioCache.get(cacheKey);
+  if (cached && Date.now() - cached.computedAt < PORTFOLIO_CACHE_MS) {
+    return cached.portfolio;
+  }
+
+  const portfolio = await fetchLatestPortfolioUncached(fund, holdingsLimit);
+  portfolioCache.set(cacheKey, { computedAt: Date.now(), portfolio });
+  return portfolio;
+}
+
+async function fetchLatestPortfolioUncached(fund: FundRef, holdingsLimit: number): Promise<FundPortfolio> {
   const empty: FundPortfolio = {
     name: fund.name,
     manager: fund.manager,

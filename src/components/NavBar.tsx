@@ -13,13 +13,13 @@ import { auth } from "@/lib/auth";
 import { Logo } from "@/components/Logo";
 
 const links = [
-  { href: "/dashboard", label: "Dashboard", icon: ChartLine },
-  { href: "/briefing", label: "Daily Brief", icon: Newspaper },
-  { href: "/stocks", label: "Stocks", icon: TrendUp },
-  { href: "/watchlist", label: "Watchlist", icon: Star },
-  { href: "/top-traders", label: "Top Traders", icon: Trophy },
-  { href: "/insider-trading", label: "Insider Trading", icon: UserFocus },
-  { href: "/pricing", label: "Pricing", icon: Tag },
+  { href: "/dashboard", label: "Dashboard", icon: ChartLine, color: "var(--accent)" },
+  { href: "/briefing", label: "Daily Brief", icon: Newspaper, color: "var(--accent-2)" },
+  { href: "/stocks", label: "Stocks", icon: TrendUp, color: "var(--accent-warm)" },
+  { href: "/watchlist", label: "Watchlist", icon: Star, color: "var(--accent)" },
+  { href: "/top-traders", label: "Top Traders", icon: Trophy, color: "var(--accent-2)" },
+  { href: "/insider-trading", label: "Insider Trading", icon: UserFocus, color: "var(--accent-warm)" },
+  { href: "/pricing", label: "Pricing", icon: Tag, color: "var(--accent)" },
 ];
 
 export async function NavBar() {
@@ -41,7 +41,7 @@ export async function NavBar() {
                 href={link.href}
                 className="flex items-center gap-1.5 transition-colors hover:text-foreground"
               >
-                <Icon size={16} weight="regular" />
+                <Icon size={16} weight="regular" style={{ color: link.color }} />
                 {link.label}
               </Link>
             );

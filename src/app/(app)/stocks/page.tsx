@@ -99,11 +99,11 @@ export default async function StocksPage({
 
       <div className="mt-4 flex flex-wrap gap-2">
         {[
-          { href: "/compare", label: "Compare stocks", icon: Scales },
-          { href: "/insider-trading", label: "Insider trading", icon: UserFocus },
-          { href: "/earnings-calendar", label: "Earnings calendar", icon: CalendarCheck },
-          { href: "/dividend-calendar", label: "Dividend calendar", icon: Coins },
-          { href: "/heatmap", label: "Sector heatmap", icon: SquaresFour },
+          { href: "/compare", label: "Compare stocks", icon: Scales, color: "var(--accent)" },
+          { href: "/insider-trading", label: "Insider trading", icon: UserFocus, color: "var(--accent-2)" },
+          { href: "/earnings-calendar", label: "Earnings calendar", icon: CalendarCheck, color: "var(--accent-warm)" },
+          { href: "/dividend-calendar", label: "Dividend calendar", icon: Coins, color: "var(--accent-2)" },
+          { href: "/heatmap", label: "Sector heatmap", icon: SquaresFour, color: "var(--accent)" },
         ].map((tool) => {
           const Icon = tool.icon;
           return (
@@ -112,7 +112,7 @@ export default async function StocksPage({
               href={tool.href}
               className="flex items-center gap-1.5 rounded-full border border-panel-border px-3 py-1.5 text-xs text-muted transition-colors hover:border-accent hover:text-foreground"
             >
-              <Icon size={14} />
+              <Icon size={14} style={{ color: tool.color }} />
               {tool.label}
             </Link>
           );

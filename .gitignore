@@ -48,3 +48,6 @@ next-env.d.ts
 # local design tooling used to help build the UI — not an app dependency
 /.agents/skills/impeccable
 /.claude/skills/impeccable
+
+.vercel
+.env*

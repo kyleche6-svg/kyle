@@ -1,24 +1,35 @@
-import Link from "next/link";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
 import { getUpcomingEarnings } from "@/lib/earnings-calendar";
 import { Panel } from "@/components/Panel";
 import { Disclaimer } from "@/components/Disclaimer";
+import { MonthCalendar, type CalendarEvent } from "@/components/MonthCalendar";
 
-function formatDate(date: Date) {
-  return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+function parseMonth(month?: string): Date {
+  if (month) {
+    const [y, m] = month.split("-").map(Number);
+    if (y && m) return new Date(y, m - 1, 1);
+  }
+  return new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 }
 
-function daysUntil(date: Date) {
-  const days = Math.round((date.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
-  if (days === 0) return "Today";
-  if (days === 1) return "Tomorrow";
-  return `In ${days} days`;
-}
-
-export default async function EarningsCalendarPage() {
+export default async function EarningsCalendarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string }>;
+}) {
   await requireActiveSubscription();
 
+  const { month } = await searchParams;
+  const monthDate = parseMonth(month);
   const earnings = await getUpcomingEarnings();
+
+  const events: CalendarEvent[] = earnings.map((e) => ({
+    date: e.estimatedDate,
+    ticker: e.ticker,
+    primary: e.epsEstimate !== null ? `$${e.epsEstimate.toFixed(2)}` : "Report",
+    secondary: "Est. EPS",
+    tone: "accent",
+  }));
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
@@ -29,36 +40,7 @@ export default async function EarningsCalendarPage() {
       </p>
 
       <Panel className="mt-6">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-panel-border text-xs text-muted">
-                <th className="pb-2 pr-4 font-normal">Ticker</th>
-                <th className="pb-2 pr-4 font-normal">Company</th>
-                <th className="pb-2 pr-4 font-normal">Est. date</th>
-                <th className="pb-2 pr-4 font-normal">Countdown</th>
-                <th className="pb-2 font-normal">EPS estimate</th>
-              </tr>
-            </thead>
-            <tbody>
-              {earnings.map((e) => (
-                <tr key={e.ticker} className="border-b border-panel-border/50">
-                  <td className="py-2.5 pr-4 font-mono font-medium">
-                    <Link href={`/stocks/${e.ticker}`} className="hover:text-accent">
-                      {e.ticker}
-                    </Link>
-                  </td>
-                  <td className="py-2.5 pr-4 text-muted">{e.companyName}</td>
-                  <td className="py-2.5 pr-4 font-mono text-xs tabular-nums">{formatDate(e.estimatedDate)}</td>
-                  <td className="py-2.5 pr-4 text-xs text-accent">{daysUntil(e.estimatedDate)}</td>
-                  <td className="py-2.5 font-mono text-xs tabular-nums text-muted">
-                    {e.epsEstimate !== null ? `$${e.epsEstimate.toFixed(2)}` : "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <MonthCalendar monthDate={monthDate} events={events} basePath="/earnings-calendar" />
       </Panel>
 
       <div className="mt-6">

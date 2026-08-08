@@ -1,24 +1,35 @@
-import Link from "next/link";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
 import { getUpcomingDividends } from "@/lib/dividend-calendar";
 import { Panel } from "@/components/Panel";
 import { Disclaimer } from "@/components/Disclaimer";
+import { MonthCalendar, type CalendarEvent } from "@/components/MonthCalendar";
 
-function formatDate(date: Date) {
-  return date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+function parseMonth(month?: string): Date {
+  if (month) {
+    const [y, m] = month.split("-").map(Number);
+    if (y && m) return new Date(y, m - 1, 1);
+  }
+  return new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 }
 
-function daysUntil(date: Date) {
-  const days = Math.round((date.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
-  if (days === 0) return "Today";
-  if (days === 1) return "Tomorrow";
-  return `In ${days} days`;
-}
-
-export default async function DividendCalendarPage() {
+export default async function DividendCalendarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ month?: string }>;
+}) {
   await requireActiveSubscription();
 
+  const { month } = await searchParams;
+  const monthDate = parseMonth(month);
   const dividends = await getUpcomingDividends();
+
+  const events: CalendarEvent[] = dividends.map((d) => ({
+    date: d.exDate,
+    ticker: d.ticker,
+    primary: `$${d.amount.toFixed(2)}`,
+    secondary: "Per share",
+    tone: "positive",
+  }));
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
@@ -29,38 +40,7 @@ export default async function DividendCalendarPage() {
       </p>
 
       <Panel className="mt-6">
-        {dividends.length === 0 ? (
-          <p className="text-sm text-muted">No upcoming dividends found.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-panel-border text-xs text-muted">
-                  <th className="pb-2 pr-4 font-normal">Ticker</th>
-                  <th className="pb-2 pr-4 font-normal">Company</th>
-                  <th className="pb-2 pr-4 font-normal">Ex-date</th>
-                  <th className="pb-2 pr-4 font-normal">Countdown</th>
-                  <th className="pb-2 font-normal">Amount / share</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dividends.map((d) => (
-                  <tr key={d.ticker} className="border-b border-panel-border/50">
-                    <td className="py-2.5 pr-4 font-mono font-medium">
-                      <Link href={`/stocks/${d.ticker}`} className="hover:text-accent">
-                        {d.ticker}
-                      </Link>
-                    </td>
-                    <td className="py-2.5 pr-4 text-muted">{d.companyName}</td>
-                    <td className="py-2.5 pr-4 font-mono text-xs tabular-nums">{formatDate(d.exDate)}</td>
-                    <td className="py-2.5 pr-4 text-xs text-accent">{daysUntil(d.exDate)}</td>
-                    <td className="py-2.5 font-mono text-xs tabular-nums text-muted">${d.amount.toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <MonthCalendar monthDate={monthDate} events={events} basePath="/dividend-calendar" />
       </Panel>
 
       <div className="mt-6">

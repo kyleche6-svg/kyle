@@ -6,6 +6,7 @@ import { StatNumber } from "@/components/StatNumber";
 import { Sparkline } from "@/components/Sparkline";
 import { EconomicCalendar } from "@/components/EconomicCalendar";
 import { Disclaimer } from "@/components/Disclaimer";
+import { PageHeader } from "@/components/PageHeader";
 
 function formatDelta(changePercent: number) {
   const sign = changePercent >= 0 ? "+" : "";
@@ -34,12 +35,12 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      <div className="flex items-baseline justify-between">
-        <h1 className="animate-sprint-in-left text-2xl font-semibold">Market Dashboard</h1>
-        <p className="animate-sprint-in-right text-xs text-muted">Refreshed on an interval, not live-polled per request.</p>
-      </div>
+      <PageHeader
+        title="Market Dashboard"
+        description="Currency, commodity, and economic-calendar data, refreshed on an interval — not live-polled per request."
+      />
 
-      <div className="stagger-children mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-[repeat(7,minmax(0,1fr))]">
+      <div className="stagger-children mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-[repeat(7,minmax(0,1fr))]">
         {currencyQuotes.map((quote, i) => (
           <Panel key={quote.symbol} title={quote.symbol}>
             <StatNumber

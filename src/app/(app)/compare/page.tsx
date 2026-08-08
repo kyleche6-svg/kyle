@@ -4,6 +4,7 @@ import { getAnalystConsensus, getKeyStatistics, TRENDING_TICKERS } from "@/lib/s
 import { searchStocks } from "@/lib/stock-search";
 import { Panel } from "@/components/Panel";
 import { Disclaimer } from "@/components/Disclaimer";
+import { PageHeader } from "@/components/PageHeader";
 
 function formatCompact(value: number) {
   if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
@@ -79,10 +80,10 @@ export default async function ComparePage({
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      <h1 className="text-2xl font-semibold">Compare Stocks</h1>
-      <p className="mt-1 text-sm text-muted">
-        Side-by-side key stats and real third-party analyst consensus — up to 4 tickers.
-      </p>
+      <PageHeader
+        title="Compare Stocks"
+        description="Side-by-side key stats and real third-party analyst consensus — up to 4 tickers."
+      />
 
       <form method="GET" className="mt-6">
         <label htmlFor="tickers" className="text-xs text-muted">Tickers (comma-separated)</label>

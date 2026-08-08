@@ -4,6 +4,7 @@ import { getStockList, getTickerSectors } from "@/lib/stocks";
 import { Panel } from "@/components/Panel";
 import { Disclaimer } from "@/components/Disclaimer";
 import { HeatmapOrbit } from "@/components/HeatmapOrbit";
+import { PageHeader } from "@/components/PageHeader";
 
 function heatColor(changePercent: number): string {
   const clamped = Math.max(-3, Math.min(3, changePercent));
@@ -35,11 +36,10 @@ export default async function HeatmapPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      <h1 className="text-2xl font-semibold">Sector Heatmap</h1>
-      <p className="mt-1 text-sm text-muted">
-        Today&apos;s movers — real quotes, sized and colored by change percent. Hover to still it,
-        click any ticker.
-      </p>
+      <PageHeader
+        title="Sector Heatmap"
+        description="Today's movers — real quotes, sized and colored by change percent. Hover to still it, click any ticker."
+      />
 
       <Panel className="mt-6">
         <HeatmapOrbit

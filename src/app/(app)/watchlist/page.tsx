@@ -12,6 +12,7 @@ import { AddWatchlistForm } from "@/components/AddWatchlistForm";
 import { AddAlertForm } from "@/components/AddAlertForm";
 import { RemoveButton } from "@/components/RemoveButton";
 import { Disclaimer } from "@/components/Disclaimer";
+import { PageHeader } from "@/components/PageHeader";
 
 function formatDelta(changePercent: number) {
   const sign = changePercent >= 0 ? "+" : "";
@@ -38,10 +39,10 @@ export default async function WatchlistPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      <h1 className="animate-sprint-in-left text-2xl font-semibold">Watchlist</h1>
-      <p className="mt-1 text-sm text-muted">
-        Stocks you&apos;re tracking, and price alerts checked whenever you view this page.
-      </p>
+      <PageHeader
+        title="Watchlist"
+        description="Stocks you're tracking, and price alerts checked whenever you view this page."
+      />
 
       <Panel title="Your watchlist" className="mt-6">
         <AddWatchlistForm />

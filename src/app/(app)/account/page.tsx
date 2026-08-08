@@ -10,6 +10,7 @@ import { DeleteAccountButton } from "@/components/DeleteAccountButton";
 import { ProfileForm } from "@/components/ProfileForm";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { TwoFactorSetup } from "@/components/TwoFactorSetup";
+import { PageHeader } from "@/components/PageHeader";
 
 export default async function AccountPage() {
   const session = await auth();
@@ -26,7 +27,7 @@ export default async function AccountPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-8">
-      <h1 className="text-2xl font-semibold">Account</h1>
+      <PageHeader title="Account" />
 
       <Panel title="Profile" className="mt-6">
         <p className="text-sm">{session.user.email}</p>

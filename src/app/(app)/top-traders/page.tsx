@@ -5,6 +5,7 @@ import { getTopTraderPortfolios, searchInstitutionalFilers } from "@/lib/institu
 import { getSpeculativeContext } from "@/lib/holdings-context";
 import { Panel } from "@/components/Panel";
 import { Disclaimer } from "@/components/Disclaimer";
+import { PageHeader } from "@/components/PageHeader";
 
 function formatCompact(value: number) {
   if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
@@ -35,16 +36,11 @@ export default async function TopTradersPage({
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      <h1 className="animate-sprint-in-left text-2xl font-semibold">Top Traders</h1>
-      <p className="mt-1 max-w-3xl text-sm text-muted">
-        Real institutional holdings from SEC Form 13F filings — what large
-        investment managers ($100M+ AUM) publicly disclosed holding as of
-        their most recent quarterly filing. The SEC gives filers up to 45
-        days after quarter-end to file, so this reflects each fund&apos;s
-        position as of that filing date, not today&apos;s live portfolio —
-        there is no faster public data for this.
-      </p>
-      <p className="mt-2 flex items-start gap-2 rounded-md border border-panel-border bg-panel px-3 py-2 text-xs text-muted">
+      <PageHeader
+        title="Top Traders"
+        description="Real institutional holdings from SEC Form 13F filings — what large investment managers ($100M+ AUM) publicly disclosed holding as of their most recent quarterly filing. The SEC gives filers up to 45 days after quarter-end to file, so this reflects each fund's position as of that filing date, not today's live portfolio — there is no faster public data for this."
+      />
+      <p className="mt-3 flex items-start gap-2 rounded-md border border-panel-border bg-panel px-3 py-2 text-xs text-muted">
         <Sparkle size={14} className="mt-0.5 shrink-0 text-accent" />
         <span>
           The &ldquo;possible context&rdquo; notes are AI-generated speculation from general

@@ -3,6 +3,7 @@ import { requireActiveSubscription } from "@/lib/subscription-guard";
 import { getDailyBrief } from "@/lib/daily-brief";
 import { Panel } from "@/components/Panel";
 import { Disclaimer } from "@/components/Disclaimer";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 export default async function BriefingPage() {
   await requireActiveSubscription();
@@ -11,27 +12,27 @@ export default async function BriefingPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-8">
-      <div className="flex items-center gap-2 text-xs text-muted">
-        <Newspaper size={16} />
-        Daily Market Brief · {brief.dateLabel}
+      <h1 className="animate-rise-in text-4xl leading-tight font-semibold tracking-tight text-balance">
+        {brief.headline}
+      </h1>
+      <div className="animate-rise-in mt-3 flex items-center gap-1.5 text-xs text-muted" style={{ animationDelay: "60ms" }}>
+        <Newspaper size={14} />
+        {brief.dateLabel}
       </div>
-      <h1 className="animate-rise-in mt-2 text-3xl font-semibold tracking-tight">{brief.headline}</h1>
-      <p className="mt-2 text-xs text-muted">
+      <p className="mt-4 max-w-2xl text-sm text-muted">
         Written from real data already on this site (currency &amp; commodity quotes, today&apos;s
         economic calendar, stock movers, insider trading disclosures) — regenerated once per day.
         Descriptive only, never a prediction or recommendation.
       </p>
 
-      <div className="mt-8 flex flex-col gap-6">
+      <div className="mt-10 flex flex-col gap-5">
         {brief.sections.map((section, i) => (
-          <Panel
-            key={i}
-            className={i % 2 === 0 ? "animate-sprint-in-left" : "animate-sprint-in-right"}
-            style={{ animationDelay: `${i * 120}ms` }}
-          >
-            <h2 className="text-base font-semibold">{section.heading}</h2>
-            <p className="mt-2 text-sm leading-relaxed text-foreground/90">{section.body}</p>
-          </Panel>
+          <ScrollReveal key={i} delayMs={i * 80}>
+            <Panel>
+              <h2 className="text-base font-semibold">{section.heading}</h2>
+              <p className="mt-2 text-[15px] leading-relaxed text-foreground/90">{section.body}</p>
+            </Panel>
+          </ScrollReveal>
         ))}
       </div>
 

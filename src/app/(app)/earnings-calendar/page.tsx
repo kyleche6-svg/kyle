@@ -3,6 +3,7 @@ import { getUpcomingEarnings } from "@/lib/earnings-calendar";
 import { Panel } from "@/components/Panel";
 import { Disclaimer } from "@/components/Disclaimer";
 import { MonthCalendar, type CalendarEvent } from "@/components/MonthCalendar";
+import { PageHeader } from "@/components/PageHeader";
 
 function parseMonth(month?: string): Date {
   if (month) {
@@ -33,11 +34,10 @@ export default async function EarningsCalendarPage({
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      <h1 className="text-2xl font-semibold">Earnings Calendar</h1>
-      <p className="mt-1 text-sm text-muted">
-        Estimated next-report dates, projected from each company&apos;s standard quarterly cadence —
-        an estimate, not a confirmed company announcement.
-      </p>
+      <PageHeader
+        title="Earnings Calendar"
+        description="Estimated next-report dates, projected from each company's standard quarterly cadence — an estimate, not a confirmed company announcement."
+      />
 
       <Panel className="mt-6">
         <MonthCalendar monthDate={monthDate} events={events} basePath="/earnings-calendar" />

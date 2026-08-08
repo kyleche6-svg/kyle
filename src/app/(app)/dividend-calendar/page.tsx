@@ -3,6 +3,7 @@ import { getUpcomingDividends } from "@/lib/dividend-calendar";
 import { Panel } from "@/components/Panel";
 import { Disclaimer } from "@/components/Disclaimer";
 import { MonthCalendar, type CalendarEvent } from "@/components/MonthCalendar";
+import { PageHeader } from "@/components/PageHeader";
 
 function parseMonth(month?: string): Date {
   if (month) {
@@ -33,11 +34,10 @@ export default async function DividendCalendarPage({
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      <h1 className="text-2xl font-semibold">Dividend Calendar</h1>
-      <p className="mt-1 text-sm text-muted">
-        Estimated upcoming ex-dividend dates and per-share amounts. Companies that don&apos;t
-        currently pay a dividend aren&apos;t listed.
-      </p>
+      <PageHeader
+        title="Dividend Calendar"
+        description="Estimated upcoming ex-dividend dates and per-share amounts. Companies that don't currently pay a dividend aren't listed."
+      />
 
       <Panel className="mt-6">
         <MonthCalendar monthDate={monthDate} events={events} basePath="/dividend-calendar" />

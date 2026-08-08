@@ -5,6 +5,7 @@ import { Panel } from "@/components/Panel";
 import { Disclaimer } from "@/components/Disclaimer";
 import { InsiderTradeTable } from "@/components/InsiderTradeTable";
 import { InsiderPodium } from "@/components/InsiderPodium";
+import { PageHeader } from "@/components/PageHeader";
 
 export default async function InsiderTradingPage({
   searchParams,
@@ -23,13 +24,10 @@ export default async function InsiderTradingPage({
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
-      <h1 className="animate-sprint-in-left text-2xl font-semibold">Insider Trading</h1>
-      <p className="mt-1 max-w-3xl text-sm text-muted">
-        Every SEC Form 4 filing from a full day, backfilled from SEC&apos;s daily index — company
-        officers, directors, and 10%+ owners disclosing trades in their own company&apos;s stock, no
-        filtering by name or company. Insiders must file within 2 business days of a transaction, so
-        this reflects that window, not real-time.
-      </p>
+      <PageHeader
+        title="Insider Trading"
+        description="Every SEC Form 4 filing from a full day, backfilled from SEC's daily index — company officers, directors, and 10%+ owners disclosing trades in their own company's stock, no filtering by name or company. Insiders must file within 2 business days of a transaction, so this reflects that window, not real-time."
+      />
 
       {gainers.length === 3 && (
         <Panel title="Top reported buyers, by estimated paper gain" className="mt-6">

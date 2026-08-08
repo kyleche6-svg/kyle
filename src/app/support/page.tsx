@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PlaceholderBanner } from "@/components/PlaceholderBanner";
+import { PageHeader } from "@/components/PageHeader";
 
 const faqs = [
   {
@@ -32,10 +33,10 @@ export default function SupportPage() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-16">
       <PlaceholderBanner />
-      <h1 className="text-2xl font-semibold">Customer Support</h1>
-      <p className="mt-2 text-sm text-muted">
-        Answers to common questions. If yours isn&apos;t covered, reach out and we&apos;ll help.
-      </p>
+      <PageHeader
+        title="Customer Support"
+        description="Answers to common questions. If yours isn't covered, reach out and we'll help."
+      />
 
       <div className="mt-8 flex flex-col gap-6">
         {faqs.map((item) => (

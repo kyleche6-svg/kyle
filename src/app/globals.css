@@ -204,15 +204,16 @@ body {
 .stagger-children > *:nth-child(7) { animation-delay: 240ms; }
 .stagger-children > *:nth-child(n + 8) { animation-delay: 280ms; }
 
-/* Gentle continuous bounce for the "Right now" scattered tabs — small
-   vertical hop, each tile offset on its own timer so they don't bob in
-   unison. */
+/* Subtle continuous float for the "Right now" scattered tabs — a small,
+   slow drift rather than a bounce, each tile offset on its own timer so
+   they don't move in unison. Toned down from an earlier, bouncier
+   version that read as too playful for a terminal-grade product. */
 @keyframes gentle-bounce {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-3px); }
 }
 
 .animate-gentle-bounce {
-  animation: gentle-bounce 1.8s ease-in-out infinite;
+  animation: gentle-bounce 3.2s ease-in-out infinite;
 }
 

@@ -11,7 +11,7 @@ import {
   SquaresFour,
 } from "@phosphor-icons/react/dist/ssr";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
-import { getStockList } from "@/lib/stocks";
+import { getStockList, TRENDING_TICKERS } from "@/lib/stocks";
 import { searchStocks } from "@/lib/stock-search";
 import { getQuote } from "@/lib/market-data";
 import { getAnalystConsensus } from "@/lib/stocks";
@@ -122,6 +122,10 @@ export default async function StocksPage({
       {movers && (
         <div className="stagger-children mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Panel title="Top gainers">
+            <p className="-mt-1 mb-3 text-xs text-muted">
+              Among the {TRENDING_TICKERS.length} large-cap stocks this app tracks — not a full-market
+              screener (that requires a paid data plan we don&apos;t use).
+            </p>
             <GainersPodium
               stocks={movers.gainers.map((s) => ({ ticker: s.ticker, changePercent: s.quote.changePercent }))}
             />
@@ -145,6 +149,7 @@ export default async function StocksPage({
             <BearSkyline />
             <div className="relative flex flex-col gap-2.5">
               <h2 className="mb-1 text-sm font-medium text-muted">Top losers</h2>
+              <p className="mb-2 text-xs text-muted">Among tracked stocks, not the full market.</p>
               {movers.losers.map((stock) => (
                 <Link
                   key={stock.ticker}

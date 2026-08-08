@@ -1,10 +1,12 @@
 @import "tailwindcss";
 
-/* Redesigned palette: deep blue-black + electric-blue accent, replacing the
-   earlier warm gold system per explicit product-owner reference (a clean,
-   glassy blue fintech mockup). Semantic green/red (gain/loss) stay
-   unchanged — blue is reserved for brand/interactive elements only, never
-   decoration, so it never collides with the gain/loss vocabulary. */
+/* Palette v3: still a dark fintech base, but with a real three-color
+   brand system instead of one blue doing every job — electric blue
+   (primary CTAs/links/focus), violet (secondary highlights, the second
+   half of every brand gradient), and amber (premium/promo moments —
+   discount badges, the podium's gold, "special" callouts). Semantic
+   green/red (gain/loss) stay untouched and never used decoratively, so
+   they never collide with the gain/loss vocabulary. */
 :root {
   --background: #050914;
   --panel: #0d1526;
@@ -12,6 +14,9 @@
   --foreground: #f2f5fb;
   --muted: #8492b3;
   --accent: #4d8dff;
+  --accent-2: #a855f7;
+  --accent-warm: #f5a623;
+  --gradient-brand: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
   --positive: #22c55e;
   --negative: #ef4444;
 }
@@ -23,6 +28,8 @@
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-warm: var(--accent-warm);
   --color-positive: var(--positive);
   --color-negative: var(--negative);
   --font-sans: var(--font-body);

@@ -49,6 +49,15 @@ export type NewsArticle = {
 };
 
 // Default landing set for the /stocks list before a search is entered.
+// Twelve Data's real market-wide gainers/losers screener
+// (/market_movers/stocks) is paid-plan-only — confirmed live, the free
+// tier gets a 403. There is no free way to screen the entire market, so
+// "top gainers/losers" here can only ever rank within this tracked list,
+// never the whole market. Kept broad across sectors for better real
+// coverage, and the UI must say "among tracked stocks" rather than imply
+// full-market ranking — the earlier unqualified "Top gainers" label was
+// genuinely misleading (a stock outside this list could easily have
+// moved more than anything shown).
 export const TRENDING_TICKERS = [
   { ticker: "AAPL", companyName: "Apple Inc.", basePrice: 227.5 },
   { ticker: "MSFT", companyName: "Microsoft Corp.", basePrice: 441.2 },
@@ -74,6 +83,33 @@ export const TRENDING_TICKERS = [
   { ticker: "BA", companyName: "Boeing Co.", basePrice: 189.3 },
   { ticker: "UBER", companyName: "Uber Technologies", basePrice: 78.5 },
   { ticker: "PLTR", companyName: "Palantir Technologies", basePrice: 158.4 },
+  { ticker: "ORCL", companyName: "Oracle Corp.", basePrice: 178.9 },
+  { ticker: "INTC", companyName: "Intel Corp.", basePrice: 34.2 },
+  { ticker: "QCOM", companyName: "Qualcomm Inc.", basePrice: 168.7 },
+  { ticker: "TXN", companyName: "Texas Instruments", basePrice: 198.4 },
+  { ticker: "IBM", companyName: "IBM Corp.", basePrice: 231.6 },
+  { ticker: "NOW", companyName: "ServiceNow Inc.", basePrice: 942.3 },
+  { ticker: "SHOP", companyName: "Shopify Inc.", basePrice: 82.4 },
+  { ticker: "SQ", companyName: "Block Inc.", basePrice: 74.8 },
+  { ticker: "COIN", companyName: "Coinbase Global", basePrice: 214.6 },
+  { ticker: "MRNA", companyName: "Moderna Inc.", basePrice: 42.3 },
+  { ticker: "PFE", companyName: "Pfizer Inc.", basePrice: 26.4 },
+  { ticker: "ABBV", companyName: "AbbVie Inc.", basePrice: 184.2 },
+  { ticker: "MRK", companyName: "Merck & Co.", basePrice: 96.7 },
+  { ticker: "BAC", companyName: "Bank of America Corp.", basePrice: 44.6 },
+  { ticker: "GS", companyName: "Goldman Sachs Group", basePrice: 612.3 },
+  { ticker: "MA", companyName: "Mastercard Inc.", basePrice: 512.8 },
+  { ticker: "HD", companyName: "Home Depot Inc.", basePrice: 398.4 },
+  { ticker: "MCD", companyName: "McDonald's Corp.", basePrice: 296.7 },
+  { ticker: "NKE", companyName: "Nike Inc.", basePrice: 76.3 },
+  { ticker: "SBUX", companyName: "Starbucks Corp.", basePrice: 94.6 },
+  { ticker: "T", companyName: "AT&T Inc.", basePrice: 22.8 },
+  { ticker: "CVX", companyName: "Chevron Corp.", basePrice: 156.2 },
+  { ticker: "CAT", companyName: "Caterpillar Inc.", basePrice: 384.7 },
+  { ticker: "GE", companyName: "GE Aerospace", basePrice: 178.9 },
+  { ticker: "F", companyName: "Ford Motor Co.", basePrice: 11.2 },
+  { ticker: "GM", companyName: "General Motors Co.", basePrice: 52.4 },
+  { ticker: "RIVN", companyName: "Rivian Automotive", basePrice: 12.6 },
 ];
 
 const SECTORS = [

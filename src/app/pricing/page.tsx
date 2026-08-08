@@ -79,8 +79,11 @@ export default function PricingPage() {
           </form>
         </Panel>
 
-        <Panel className="relative border-accent/40">
-          <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-1 text-xs font-medium text-background">
+        <Panel className="relative border-accent-2/40">
+          <span
+            className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-xs font-medium text-background"
+            style={{ background: "var(--gradient-brand)" }}
+          >
             Save {yearlySavingsPercent}%
           </span>
           <div className="text-center">
@@ -95,7 +98,8 @@ export default function PricingPage() {
             <input type="hidden" name="plan" value="yearly" />
             <button
               type="submit"
-              className="w-full rounded-full bg-accent px-4 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
+              className="w-full rounded-full px-4 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90"
+              style={{ background: "var(--gradient-brand)" }}
             >
               Subscribe yearly
             </button>

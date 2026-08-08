@@ -12,7 +12,13 @@ const features = [
   "Full access to all future dashboard features",
 ];
 
+// $12.99 is the real, currently-charged monthly price — $16.24 is the
+// real Stripe base price with a genuine 20%-off launch coupon applied at
+// checkout (see createCheckoutSession), not a fabricated "was" price for
+// display purposes only.
+const monthlyOgPrice = 16.24;
 const monthlyPrice = 12.99;
+const monthlyDiscountPercent = Math.round((1 - monthlyPrice / monthlyOgPrice) * 100);
 const yearlyPrice = 99.99;
 const yearlySavingsPercent = Math.round(
   (1 - yearlyPrice / (monthlyPrice * 12)) * 100,
@@ -40,16 +46,23 @@ export default function PricingPage() {
     <div className="mx-auto max-w-4xl px-6 py-20">
       <div className="text-center">
         <h1 className="text-3xl font-semibold tracking-tight">Pricing</h1>
-        <p className="mt-3 text-muted">
+        <p className="mx-auto mt-3 max-w-xl text-muted">
+          DollarWatch is a market-intelligence dashboard: real USD/currency data, an economic
+          calendar, SEC insider trading filings, institutional 13F holdings, and analyst
+          consensus — all sourced from real, attributed data, never a generated prediction.
           Everything included on every plan. Cancel anytime.
         </p>
       </div>
 
       <div className="mx-auto mt-12 grid max-w-3xl grid-cols-1 gap-6 sm:grid-cols-2">
-        <Panel>
+        <Panel className="relative">
+          <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-positive px-3 py-1 text-xs font-medium text-background">
+            {monthlyDiscountPercent}% off
+          </span>
           <div className="text-center">
             <p className="text-sm text-muted">Monthly</p>
-            <p className="mt-2 font-mono text-4xl font-semibold">
+            <p className="mt-2 font-mono text-sm text-muted line-through">${monthlyOgPrice}/month</p>
+            <p className="font-mono text-4xl font-semibold">
               ${monthlyPrice}
               <span className="text-lg text-muted">/month</span>
             </p>

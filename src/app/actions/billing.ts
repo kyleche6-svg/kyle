@@ -82,10 +82,16 @@ export async function createCheckoutSession(formData: FormData) {
 
   const origin = await getOrigin();
 
+  // Real, time-of-purchase discount applied by Stripe itself — not a
+  // fabricated "was" price in the UI. Monthly only, per the current promo.
+  const launchCouponId =
+    plan === "monthly" ? process.env.STRIPE_MONTHLY_LAUNCH_COUPON_ID : undefined;
+
   const checkoutSession = await stripe.checkout.sessions.create({
     mode: "subscription",
     customer: stripeCustomerId,
     line_items: [{ price: priceId, quantity: 1 }],
+    discounts: launchCouponId ? [{ coupon: launchCouponId }] : undefined,
     success_url: `${origin}/dashboard?checkout=success`,
     cancel_url: `${origin}/pricing?checkout=cancelled`,
   });

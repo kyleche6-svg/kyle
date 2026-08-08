@@ -13,6 +13,7 @@ import { AddAlertForm } from "@/components/AddAlertForm";
 import { RemoveButton } from "@/components/RemoveButton";
 import { Disclaimer } from "@/components/Disclaimer";
 import { PageHeader } from "@/components/PageHeader";
+import { ChangeBar } from "@/components/ChangeBar";
 
 function formatDelta(changePercent: number) {
   const sign = changePercent >= 0 ? "+" : "";
@@ -64,7 +65,7 @@ export default async function WatchlistPage() {
                   const quote = quotes[i];
                   const isPositive = quote.changePercent >= 0;
                   return (
-                    <tr key={item.id} className="border-b border-panel-border/50">
+                    <tr key={item.id} className="border-b border-panel-border/50 transition-colors hover:bg-panel-border/20">
                       <td className="py-2.5 pr-4 font-mono font-medium">
                         <Link href={`/stocks/${item.ticker}`} prefetch={false} className="hover:text-accent">
                           {item.ticker}
@@ -72,14 +73,17 @@ export default async function WatchlistPage() {
                       </td>
                       <td className="py-2.5 pr-4 font-mono tabular-nums">${quote.price.toFixed(2)}</td>
                       <td className="py-2.5 pr-4">
-                        <span
-                          className={`flex items-center gap-1 font-mono text-xs tabular-nums ${
-                            isPositive ? "text-positive" : "text-negative"
-                          }`}
-                        >
-                          {isPositive ? <TrendUp size={12} weight="bold" /> : <TrendDown size={12} weight="bold" />}
-                          {formatDelta(quote.changePercent)}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`flex items-center gap-1 font-mono text-xs tabular-nums ${
+                              isPositive ? "text-positive" : "text-negative"
+                            }`}
+                          >
+                            {isPositive ? <TrendUp size={12} weight="bold" /> : <TrendDown size={12} weight="bold" />}
+                            {formatDelta(quote.changePercent)}
+                          </span>
+                          <ChangeBar changePercent={quote.changePercent} />
+                        </div>
                       </td>
                       <td className="py-2.5">
                         <RemoveButton action={removeFromWatchlist.bind(null, item.id)} label={`Remove ${item.ticker}`} />

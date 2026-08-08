@@ -58,7 +58,7 @@ export function InsiderTradeTable({
           </thead>
           <tbody>
             {trades.map((trade) => (
-              <tr key={trade.id} className="border-b border-panel-border/50">
+              <tr key={trade.id} className="border-b border-panel-border/50 transition-colors hover:bg-panel-border/20">
                 <td className="py-2 pr-4 font-mono font-medium">
                   <Link href={`/stocks/${trade.ticker}`} prefetch={false} className="hover:text-accent">
                     {trade.ticker}
@@ -76,12 +76,12 @@ export function InsiderTradeTable({
                 <td className="py-2 pr-4 text-xs text-muted">{trade.relationship}</td>
                 <td className="py-2 pr-4">
                   <span
-                    className={`flex items-center gap-1 text-xs ${
+                    className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
                       trade.direction === "buy"
-                        ? "text-positive"
+                        ? "bg-positive/10 text-positive"
                         : trade.direction === "sell"
-                          ? "text-negative"
-                          : "text-muted"
+                          ? "bg-negative/10 text-negative"
+                          : "bg-panel-border/40 text-muted"
                     }`}
                   >
                     {trade.direction === "buy" ? (

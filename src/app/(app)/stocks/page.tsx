@@ -20,6 +20,8 @@ import { GainersPodium } from "@/components/GainersPodium";
 import { BearSkyline } from "@/components/BearSkyline";
 import { Disclaimer } from "@/components/Disclaimer";
 import { PageHeader } from "@/components/PageHeader";
+import { ChangeBar } from "@/components/ChangeBar";
+import { ConsensusBar } from "@/components/ConsensusBar";
 
 const CONSENSUS_LABELS: Record<string, string> = {
   strong_buy: "Strong Buy",
@@ -193,7 +195,10 @@ export default async function StocksPage({
                     ((stock.avgPriceTarget - stock.quote.price) / stock.quote.price) * 100;
 
                   return (
-                    <tr key={stock.ticker} className="border-b border-panel-border/50">
+                    <tr
+                      key={stock.ticker}
+                      className="border-b border-panel-border/50 transition-colors hover:bg-panel-border/20"
+                    >
                       <td className="py-2.5 pr-4 font-mono font-medium">
                         <Link href={`/stocks/${stock.ticker}`} prefetch={false} className="hover:text-accent">
                           {stock.ticker}
@@ -204,18 +209,21 @@ export default async function StocksPage({
                         ${stock.quote.price.toFixed(2)}
                       </td>
                       <td className="py-2.5 pr-4">
-                        <span
-                          className={`flex items-center gap-1 font-mono text-xs tabular-nums ${
-                            isPositive ? "text-positive" : "text-negative"
-                          }`}
-                        >
-                          {isPositive ? (
-                            <TrendUp size={12} weight="bold" />
-                          ) : (
-                            <TrendDown size={12} weight="bold" />
-                          )}
-                          {formatDelta(stock.quote.changePercent)}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`flex items-center gap-1 font-mono text-xs tabular-nums ${
+                              isPositive ? "text-positive" : "text-negative"
+                            }`}
+                          >
+                            {isPositive ? (
+                              <TrendUp size={12} weight="bold" />
+                            ) : (
+                              <TrendDown size={12} weight="bold" />
+                            )}
+                            {formatDelta(stock.quote.changePercent)}
+                          </span>
+                          <ChangeBar changePercent={stock.quote.changePercent} />
+                        </div>
                       </td>
                       <td className="py-2.5 pr-4">
                         <span className={`font-medium ${consensusColor(stock.consensus)}`}>
@@ -223,11 +231,14 @@ export default async function StocksPage({
                         </span>
                       </td>
                       <td className="py-2.5 pr-4 text-xs text-muted">
-                        <span className="text-positive">{stock.buyCount}</span>
-                        {" / "}
-                        <Minus size={10} className="inline" /> {stock.holdCount}
-                        {" / "}
-                        <span className="text-negative">{stock.sellCount}</span>
+                        <div className="flex items-center gap-2">
+                          <ConsensusBar buyCount={stock.buyCount} holdCount={stock.holdCount} sellCount={stock.sellCount} />
+                          <span className="text-positive">{stock.buyCount}</span>
+                          {" / "}
+                          <Minus size={10} className="inline" /> {stock.holdCount}
+                          {" / "}
+                          <span className="text-negative">{stock.sellCount}</span>
+                        </div>
                       </td>
                       <td className="py-2.5 font-mono tabular-nums">
                         ${stock.avgPriceTarget.toFixed(2)}{" "}

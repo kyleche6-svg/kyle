@@ -6,6 +6,7 @@ import { getSpeculativeContext } from "@/lib/holdings-context";
 import { Panel } from "@/components/Panel";
 import { Disclaimer } from "@/components/Disclaimer";
 import { PageHeader } from "@/components/PageHeader";
+import { CompositionBar } from "@/components/CompositionBar";
 
 function formatCompact(value: number) {
   if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
@@ -109,6 +110,12 @@ export default async function TopTradersPage({
                 </div>
               </div>
               <p className="mt-1 text-[11px] text-muted">Filed {formatFilingDate(fund.filingDate)}</p>
+
+              {fund.holdings.length > 0 && (
+                <div className="mt-3">
+                  <CompositionBar weights={fund.holdings.slice(0, 5).map((h) => h.weight)} />
+                </div>
+              )}
 
               {fund.holdings.length === 0 ? (
                 <p className="mt-4 text-sm text-muted">No holdings data available for this filer.</p>

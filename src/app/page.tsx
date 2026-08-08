@@ -16,6 +16,8 @@ import { RotatingWord } from "@/components/RotatingWord";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { HeroOrbit } from "@/components/HeroOrbit";
 import { CountUp } from "@/components/CountUp";
+import { TickerTape } from "@/components/TickerTape";
+import { SpotlightCard } from "@/components/SpotlightCard";
 import { getStockList } from "@/lib/stocks";
 
 const ROTATING_WORDS = ["USD strength", "insider filings", "institutional holdings", "analyst consensus"];
@@ -59,9 +61,13 @@ export default async function Home() {
   const orbitStocks = stocks
     .slice(0, 8)
     .map((s) => ({ ticker: s.ticker, changePercent: s.quote.changePercent }));
+  const tapeStocks = stocks
+    .slice(0, 18)
+    .map((s) => ({ ticker: s.ticker, changePercent: s.quote.changePercent, price: s.quote.price }));
 
   return (
     <div>
+      <TickerTape stocks={tapeStocks} />
       <div className="relative overflow-hidden border-b border-panel-border">
         <div
           className="pointer-events-none absolute top-0 right-0 h-[520px] w-[520px] opacity-25 blur-[100px]"
@@ -193,21 +199,23 @@ export default async function Home() {
             const Icon = pillar.icon;
             return (
               <ScrollReveal key={pillar.title} delayMs={i * 120}>
-                <Link href={pillar.href} className="group block h-full">
-                  <p
-                    className="font-mono text-sm font-semibold tracking-wide"
-                    style={{ color: pillar.color }}
-                  >
-                    {pillar.number}
-                  </p>
-                  <div className="mt-3 flex items-center gap-2.5 border-t border-panel-border pt-4">
-                    <Icon size={20} weight="regular" style={{ color: pillar.color }} />
-                    <h3 className="text-base font-semibold transition-colors group-hover:text-accent">
-                      {pillar.title}
-                    </h3>
-                  </div>
-                  <p className="mt-2.5 text-sm text-muted">{pillar.body}</p>
-                </Link>
+                <SpotlightCard className="rounded-lg border border-panel-border p-5 transition-colors hover:border-[color-mix(in_srgb,var(--accent)_30%,var(--panel-border))]">
+                  <Link href={pillar.href} className="group relative block h-full">
+                    <p
+                      className="font-mono text-sm font-semibold tracking-wide"
+                      style={{ color: pillar.color }}
+                    >
+                      {pillar.number}
+                    </p>
+                    <div className="mt-3 flex items-center gap-2.5 border-t border-panel-border pt-4">
+                      <Icon size={20} weight="regular" style={{ color: pillar.color }} />
+                      <h3 className="text-base font-semibold transition-colors group-hover:text-accent">
+                        {pillar.title}
+                      </h3>
+                    </div>
+                    <p className="mt-2.5 text-sm text-muted">{pillar.body}</p>
+                  </Link>
+                </SpotlightCard>
               </ScrollReveal>
             );
           })}

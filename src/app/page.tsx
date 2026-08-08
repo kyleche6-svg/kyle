@@ -14,6 +14,9 @@ import { StatNumber } from "@/components/StatNumber";
 import { MarketSkyline } from "@/components/MarketSkyline";
 import { RotatingWord } from "@/components/RotatingWord";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { HeroOrbit } from "@/components/HeroOrbit";
+import { CountUp } from "@/components/CountUp";
+import { getStockList } from "@/lib/stocks";
 
 const ROTATING_WORDS = ["USD strength", "insider filings", "institutional holdings", "analyst consensus"];
 
@@ -51,7 +54,12 @@ const pillars = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const stocks = await getStockList();
+  const orbitStocks = stocks
+    .slice(0, 8)
+    .map((s) => ({ ticker: s.ticker, changePercent: s.quote.changePercent }));
+
   return (
     <div>
       <div className="relative overflow-hidden border-b border-panel-border">
@@ -70,7 +78,7 @@ export default function Home() {
           }}
           aria-hidden="true"
         />
-        <div className="relative mx-auto max-w-6xl px-6 pt-20 pb-10 sm:pt-28 sm:pb-16">
+        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 pt-20 pb-10 sm:pt-28 sm:pb-16 lg:grid-cols-[1.1fr_0.9fr] lg:gap-4">
           <div className="max-w-3xl">
             <div className="animate-rise-in mb-8 inline-flex items-center gap-2 border border-panel-border bg-panel/60 px-3 py-1 text-xs font-medium tracking-[0.15em] text-muted uppercase backdrop-blur-sm">
               Real data, always attributed — not financial advice
@@ -111,6 +119,9 @@ export default function Home() {
               </span>
             </div>
           </div>
+          <div className="animate-rise-in hidden lg:block" style={{ animationDelay: "200ms" }}>
+            <HeroOrbit stocks={orbitStocks} />
+          </div>
         </div>
       </div>
 
@@ -125,7 +136,7 @@ export default function Home() {
           data institutions already see, priced for one person instead of a trading desk.
         </p>
         <p className="mt-6 inline-flex items-center gap-2 border border-panel-border bg-panel/60 px-6 py-3 text-lg font-semibold tracking-wide uppercase">
-          Trusted by 10,000+ monthly users
+          Trusted by <CountUp value={10000} suffix="+" /> monthly users
         </p>
       </ScrollReveal>
 

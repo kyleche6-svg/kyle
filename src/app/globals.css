@@ -221,3 +221,26 @@ body {
   animation: gentle-bounce 3.2s ease-in-out infinite;
 }
 
+/* Hero centerpiece orbit (see HeroOrbit.tsx): the ring itself spins one
+   direction, and each chip inside spins the exact opposite direction at
+   the same speed, canceling the ring's rotation so every ticker chip
+   stays flat/readable ("billboarded") instead of rotating in place as it
+   swings around. */
+@keyframes orbit-spin {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
+}
+
+@keyframes orbit-spin-reverse {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(-360deg); }
+}
+
+.animate-orbit-spin {
+  animation: orbit-spin 22s linear infinite;
+}
+
+.animate-orbit-spin-reverse {
+  animation: orbit-spin-reverse 22s linear infinite;
+}
+

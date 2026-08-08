@@ -100,7 +100,7 @@ export function HeatmapOrbit({ stocks }: { stocks: OrbitStock[] }) {
   }, [stocks, baseAngles, radius, scales]);
 
   return (
-    <div className="relative h-[340px] w-full" style={{ perspective: "1400px" }}>
+    <div className="relative h-[340px] w-full overflow-hidden" style={{ perspective: "1400px" }}>
       <div className="absolute top-1/2 left-1/2" style={{ transformStyle: "preserve-3d" }}>
         {stocks.map((stock, i) => (
           <Link

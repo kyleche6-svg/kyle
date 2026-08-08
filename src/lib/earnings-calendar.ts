@@ -46,7 +46,17 @@ function mockNextEarnings(ticker: string): { date: Date; epsEstimate: number | n
   return { date, epsEstimate: Math.round(epsEstimate * 100) / 100 };
 }
 
+// Same fan-out cost problem as getStockList — ~50 tickers, one external
+// call each, on every single page view. Cached in-process for 30 minutes
+// (real earnings-date estimates don't shift minute to minute).
+const EARNINGS_CACHE_MS = 30 * 60 * 1000;
+let earningsCache: { computedAt: number; list: UpcomingEarnings[] } | null = null;
+
 export async function getUpcomingEarnings(): Promise<UpcomingEarnings[]> {
+  if (earningsCache && Date.now() - earningsCache.computedAt < EARNINGS_CACHE_MS) {
+    return earningsCache.list;
+  }
+
   const results = await Promise.all(
     TRENDING_TICKERS.map(async (t) => {
       const real = await twelveDataNextEarnings(t.ticker);
@@ -55,5 +65,7 @@ export async function getUpcomingEarnings(): Promise<UpcomingEarnings[]> {
     }),
   );
 
-  return results.sort((a, b) => a.estimatedDate.getTime() - b.estimatedDate.getTime());
+  const list = results.sort((a, b) => a.estimatedDate.getTime() - b.estimatedDate.getTime());
+  earningsCache = { computedAt: Date.now(), list };
+  return list;
 }

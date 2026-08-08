@@ -418,7 +418,25 @@ export async function getStockNews(ticker: string, companyName: string): Promise
   return real ?? mockNews(ticker, companyName);
 }
 
+// Every page load of /stocks and /heatmap called this independently — each
+// one fanning out to 2 external calls per tracked ticker (100 calls total
+// now that the list is ~50 tickers, up from 24). Cached in-process for 2
+// minutes: real-time-enough for quotes, without paying that fan-out cost
+// on every single request. Same pattern as the insider-gainers and 13F
+// caches added earlier for the same reason.
+const STOCK_LIST_CACHE_MS = 2 * 60 * 1000;
+let stockListCache: { computedAt: number; list: Awaited<ReturnType<typeof computeStockList>> } | null = null;
+
 export async function getStockList() {
+  if (stockListCache && Date.now() - stockListCache.computedAt < STOCK_LIST_CACHE_MS) {
+    return stockListCache.list;
+  }
+  const list = await computeStockList();
+  stockListCache = { computedAt: Date.now(), list };
+  return list;
+}
+
+async function computeStockList() {
   return Promise.all(
     TRENDING_TICKERS.map(async (stock) => {
       const quote = await getQuote(stock.ticker, stock.companyName, stock.basePrice);
@@ -432,6 +450,28 @@ export async function getStockList() {
       };
     }),
   );
+}
+
+// Sector barely ever changes for a given company, so this is cached much
+// longer than the price-driven caches above — the heatmap page was doing
+// its own uncached 50-ticker profile fan-out on every load on top of
+// getStockList()'s (now-cached) fan-out.
+const SECTOR_CACHE_MS = 15 * 60 * 1000;
+let sectorCache: { computedAt: number; sectors: Map<string, string> } | null = null;
+
+export async function getTickerSectors(): Promise<Map<string, string>> {
+  if (sectorCache && Date.now() - sectorCache.computedAt < SECTOR_CACHE_MS) {
+    return sectorCache.sectors;
+  }
+  const entries = await Promise.all(
+    TRENDING_TICKERS.map(async (t) => {
+      const profile = await getCompanyProfile(t.ticker, t.companyName);
+      return [t.ticker, profile.sector] as const;
+    }),
+  );
+  const sectors = new Map(entries);
+  sectorCache = { computedAt: Date.now(), sectors };
+  return sectors;
 }
 
 export async function getStockDetail(ticker: string, companyName: string, basePrice: number) {

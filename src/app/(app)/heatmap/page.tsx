@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
-import { getStockList, getCompanyProfile, TRENDING_TICKERS } from "@/lib/stocks";
+import { getStockList, getTickerSectors } from "@/lib/stocks";
 import { Panel } from "@/components/Panel";
 import { Disclaimer } from "@/components/Disclaimer";
 import { HeatmapOrbit } from "@/components/HeatmapOrbit";
@@ -15,17 +15,11 @@ function heatColor(changePercent: number): string {
 export default async function HeatmapPage() {
   await requireActiveSubscription();
 
-  const stocks = await getStockList();
-  const profiles = await Promise.all(
-    stocks.map((s) => {
-      const trending = TRENDING_TICKERS.find((t) => t.ticker === s.ticker);
-      return getCompanyProfile(s.ticker, trending?.companyName ?? s.companyName);
-    }),
-  );
+  const [stocks, sectorsByTicker] = await Promise.all([getStockList(), getTickerSectors()]);
 
   const bySector = new Map<string, { ticker: string; companyName: string; changePercent: number }[]>();
-  stocks.forEach((s, i) => {
-    const sector = profiles[i].sector;
+  stocks.forEach((s) => {
+    const sector = sectorsByTicker.get(s.ticker) ?? "Other";
     const list = bySector.get(sector) ?? [];
     list.push({ ticker: s.ticker, companyName: s.companyName, changePercent: s.quote.changePercent });
     bySector.set(sector, list);

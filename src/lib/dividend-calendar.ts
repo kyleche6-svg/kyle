@@ -44,7 +44,16 @@ function mockNextDividend(ticker: string): { exDate: Date; amount: number } | nu
   return { exDate, amount: Math.round(amount * 100) / 100 };
 }
 
+// Same fan-out cost problem as getStockList — ~50 tickers, one external
+// call each, on every single page view. Cached in-process for 30 minutes.
+const DIVIDEND_CACHE_MS = 30 * 60 * 1000;
+let dividendCache: { computedAt: number; list: UpcomingDividend[] } | null = null;
+
 export async function getUpcomingDividends(): Promise<UpcomingDividend[]> {
+  if (dividendCache && Date.now() - dividendCache.computedAt < DIVIDEND_CACHE_MS) {
+    return dividendCache.list;
+  }
+
   const results = await Promise.all(
     TRENDING_TICKERS.map(async (t) => {
       const real = await twelveDataNextDividend(t.ticker);
@@ -54,7 +63,9 @@ export async function getUpcomingDividends(): Promise<UpcomingDividend[]> {
     }),
   );
 
-  return results
+  const list = results
     .filter((r): r is UpcomingDividend => r !== null)
     .sort((a, b) => a.exDate.getTime() - b.exDate.getTime());
+  dividendCache = { computedAt: Date.now(), list };
+  return list;
 }

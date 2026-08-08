@@ -1,22 +1,26 @@
 @import "tailwindcss";
 
-/* Palette v3: still a dark fintech base, but with a real three-color
-   brand system instead of one blue doing every job — electric blue
-   (primary CTAs/links/focus), violet (secondary highlights, the second
-   half of every brand gradient), and amber (premium/promo moments —
-   discount badges, the podium's gold, "special" callouts). Semantic
-   green/red (gain/loss) stay untouched and never used decoratively, so
-   they never collide with the gain/loss vocabulary. */
+/* Palette v4: researched against what actually wins design awards in
+   fintech (Jeton, Robinhood, Wise) — the common thread isn't "more
+   colors," it's ONE saturated signature color committed at every scale
+   against a near-black base, instead of several muted accents sharing
+   the load. Blue is the most common, least distinctive choice in this
+   category, so the signature color here is a hot amber/orange —
+   confident, warm, still reads "serious" against near-black. Violet
+   survives only as a rare secondary flourish (gradient endpoint), never
+   a standalone accent. Semantic green/red (gain/loss) stay untouched
+   and never used decoratively, so they never collide with the
+   gain/loss vocabulary. */
 :root {
-  --background: #050914;
-  --panel: #0d1526;
-  --panel-border: #1e2c4a;
-  --foreground: #f2f5fb;
-  --muted: #8492b3;
-  --accent: #4d8dff;
+  --background: #07070a;
+  --panel: #121116;
+  --panel-border: #262430;
+  --foreground: #f7f5f2;
+  --muted: #928f9c;
+  --accent: #ff7a1a;
   --accent-2: #a855f7;
-  --accent-warm: #f5a623;
-  --gradient-brand: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+  --accent-warm: #ffb020;
+  --gradient-brand: linear-gradient(135deg, var(--accent) 0%, #ff3d68 100%);
   --positive: #22c55e;
   --negative: #ef4444;
 }

@@ -7,7 +7,20 @@ function logViolation(details: Record<string, string>) {
   console.warn(JSON.stringify({ event: "rate_limit_violation", ...details }));
 }
 
+const CANONICAL_HOST = "dollarwatch.watch";
+
 export async function proxy(request: NextRequest) {
+  // The old default dollarwatch.vercel.app domain still works (Vercel
+  // never lets you turn it off), so redirect it to the real domain
+  // rather than leaving two live URLs for the same site indefinitely.
+  const host = request.headers.get("host");
+  if (host && host !== CANONICAL_HOST && host.endsWith(".vercel.app")) {
+    const url = new URL(request.url);
+    url.host = CANONICAL_HOST;
+    url.protocol = "https:";
+    return NextResponse.redirect(url, 308);
+  }
+
   const { pathname } = request.nextUrl;
 
   if (!pathname.startsWith("/api")) {
@@ -65,5 +78,10 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/api/:path*"],
+  // Broadened from "/api/:path*" so the vercel.app -> dollarwatch.watch
+  // redirect above applies to every page, not just API routes. Every
+  // other check in this file still exits immediately for non-API paths,
+  // so this doesn't change rate-limiting behavior — only adds the host
+  // check ahead of it.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

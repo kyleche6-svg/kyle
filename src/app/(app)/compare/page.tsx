@@ -5,6 +5,7 @@ import { searchStocks } from "@/lib/stock-search";
 import { Panel } from "@/components/Panel";
 import { Disclaimer } from "@/components/Disclaimer";
 import { PageHeader } from "@/components/PageHeader";
+import { ChangeBar } from "@/components/ChangeBar";
 
 function formatCompact(value: number) {
   if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
@@ -64,19 +65,53 @@ export default async function ComparePage({
     }),
   );
 
-  const metrics: { label: string; render: (row: (typeof rows)[number]) => string }[] = [
+type Row = (typeof rows)[number];
+type Metric = {
+  label: string;
+  render: (row: Row) => string;
+  value?: (row: Row) => number | null;
+  higherIsBetter?: boolean;
+};
+
+const metrics: Metric[] = [
     { label: "Price", render: (r) => `$${r.quote.price.toFixed(2)}` },
-    { label: "Change", render: (r) => `${r.quote.changePercent >= 0 ? "+" : ""}${r.quote.changePercent.toFixed(2)}%` },
-    { label: "Market Cap", render: (r) => formatCompact(r.stats.marketCap) },
-    { label: "P/E (TTM)", render: (r) => formatRatio(r.stats.trailingPE) },
-    { label: "Forward P/E", render: (r) => formatRatio(r.stats.forwardPE) },
-    { label: "P/S Ratio", render: (r) => formatRatio(r.stats.priceToSales) },
-    { label: "Profit Margin", render: (r) => formatPercent(r.stats.profitMargin) },
-    { label: "Revenue Growth", render: (r) => formatPercent(r.stats.revenueGrowth) },
+    {
+      label: "Change",
+      render: (r) => `${r.quote.changePercent >= 0 ? "+" : ""}${r.quote.changePercent.toFixed(2)}%`,
+      value: (r) => r.quote.changePercent,
+      higherIsBetter: true,
+    },
+    { label: "Market Cap", render: (r) => formatCompact(r.stats.marketCap), value: (r) => r.stats.marketCap, higherIsBetter: true },
+    { label: "P/E (TTM)", render: (r) => formatRatio(r.stats.trailingPE), value: (r) => r.stats.trailingPE, higherIsBetter: false },
+    { label: "Forward P/E", render: (r) => formatRatio(r.stats.forwardPE), value: (r) => r.stats.forwardPE, higherIsBetter: false },
+    { label: "P/S Ratio", render: (r) => formatRatio(r.stats.priceToSales), value: (r) => r.stats.priceToSales, higherIsBetter: false },
+    {
+      label: "Profit Margin",
+      render: (r) => formatPercent(r.stats.profitMargin),
+      value: (r) => r.stats.profitMargin,
+      higherIsBetter: true,
+    },
+    {
+      label: "Revenue Growth",
+      render: (r) => formatPercent(r.stats.revenueGrowth),
+      value: (r) => r.stats.revenueGrowth,
+      higherIsBetter: true,
+    },
     { label: "Analyst Consensus", render: (r) => CONSENSUS_LABELS[r.consensus.consensus] },
     { label: "Avg. Price Target", render: (r) => `$${r.consensus.avgPriceTarget.toFixed(2)}` },
     { label: "52W Range", render: (r) => `$${r.stats.fiftyTwoWeekLow.toFixed(0)}–$${r.stats.fiftyTwoWeekHigh.toFixed(0)}` },
   ];
+
+  function bestIndex(metric: Metric): number | null {
+    if (!metric.value) return null;
+    let best: { i: number; v: number } | null = null;
+    rows.forEach((r, i) => {
+      const v = metric.value!(r);
+      if (v === null) return;
+      if (!best || (metric.higherIsBetter ? v > best.v : v < best.v)) best = { i, v };
+    });
+    return best ? (best as { i: number }).i : null;
+  }
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-8">
@@ -118,16 +153,33 @@ export default async function ComparePage({
               </tr>
             </thead>
             <tbody>
-              {metrics.map((metric) => (
-                <tr key={metric.label} className="border-b border-panel-border/50">
-                  <td className="py-2 pr-4 text-xs text-muted">{metric.label}</td>
-                  {rows.map((r) => (
-                    <td key={r.ticker} className="py-2 pr-4 font-mono text-xs tabular-nums">
-                      {metric.render(r)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
+              {metrics.map((metric) => {
+                const winner = bestIndex(metric);
+                return (
+                  <tr key={metric.label} className="border-b border-panel-border/50">
+                    <td className="py-2 pr-4 text-xs text-muted">{metric.label}</td>
+                    {rows.map((r, i) => (
+                      <td
+                        key={r.ticker}
+                        className={`py-2 pr-4 font-mono text-xs tabular-nums ${
+                          i === winner ? "font-semibold text-positive" : ""
+                        }`}
+                      >
+                        {metric.label === "Change" ? (
+                          <div className="flex items-center gap-2">
+                            <span className={r.quote.changePercent >= 0 ? "text-positive" : "text-negative"}>
+                              {metric.render(r)}
+                            </span>
+                            <ChangeBar changePercent={r.quote.changePercent} />
+                          </div>
+                        ) : (
+                          metric.render(r)
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

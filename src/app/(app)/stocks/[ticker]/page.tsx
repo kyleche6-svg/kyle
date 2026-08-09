@@ -19,6 +19,8 @@ import { PriceChartToggle } from "@/components/PriceChartToggle";
 import { ReturnHistogram } from "@/components/ReturnHistogram";
 import { AddToWatchlistButton } from "@/components/AddToWatchlistButton";
 import { Disclaimer } from "@/components/Disclaimer";
+import { MetricBar } from "@/components/MetricBar";
+import { ConsensusBar } from "@/components/ConsensusBar";
 
 function formatPct(value: number | null, digits = 1) {
   return value === null ? "—" : `${value >= 0 ? "+" : ""}${(value * 100).toFixed(digits)}%`;
@@ -95,18 +97,34 @@ export default async function StockDetailPage({
   const isPositive = quote.changePercent >= 0;
   const targetUpside = ((consensus.avgPriceTarget - quote.price) / quote.price) * 100;
 
-  const statTiles = [
+  const statTiles: { label: string; value: string; barPercent?: number | null }[] = [
     { label: "Market Cap", value: formatCompact(stats.marketCap) },
     { label: "P/E (TTM)", value: formatRatio(stats.trailingPE) },
     { label: "Forward P/E", value: formatRatio(stats.forwardPE) },
     { label: "PEG Ratio", value: formatRatio(stats.pegRatio) },
     { label: "P/S Ratio", value: formatRatio(stats.priceToSales) },
     { label: "P/B Ratio", value: formatRatio(stats.priceToBook) },
-    { label: "Profit Margin", value: formatPercent(stats.profitMargin) },
-    { label: "Operating Margin", value: formatPercent(stats.operatingMargin) },
-    { label: "ROE", value: formatPercent(stats.returnOnEquity) },
+    {
+      label: "Profit Margin",
+      value: formatPercent(stats.profitMargin),
+      barPercent: stats.profitMargin === null ? null : stats.profitMargin * 100,
+    },
+    {
+      label: "Operating Margin",
+      value: formatPercent(stats.operatingMargin),
+      barPercent: stats.operatingMargin === null ? null : stats.operatingMargin * 100,
+    },
+    {
+      label: "ROE",
+      value: formatPercent(stats.returnOnEquity),
+      barPercent: stats.returnOnEquity === null ? null : stats.returnOnEquity * 100,
+    },
     { label: "Revenue (TTM)", value: stats.revenueTTM ? formatCompact(stats.revenueTTM) : "—" },
-    { label: "Revenue Growth", value: formatPercent(stats.revenueGrowth) },
+    {
+      label: "Revenue Growth",
+      value: formatPercent(stats.revenueGrowth),
+      barPercent: stats.revenueGrowth === null ? null : stats.revenueGrowth * 100,
+    },
     { label: "52W Range", value: `$${stats.fiftyTwoWeekLow.toFixed(0)}–$${stats.fiftyTwoWeekHigh.toFixed(0)}` },
   ];
 
@@ -152,6 +170,7 @@ export default async function StockDetailPage({
             <div key={tile.label}>
               <p className="text-xs text-muted">{tile.label}</p>
               <p className="mt-0.5 font-mono text-sm font-medium tabular-nums">{tile.value}</p>
+              {tile.barPercent !== undefined && <MetricBar percent={tile.barPercent} />}
             </div>
           ))}
         </div>
@@ -238,7 +257,10 @@ export default async function StockDetailPage({
           <p className="mt-1 text-xs text-muted">
             Based on {consensus.buyCount + consensus.holdCount + consensus.sellCount} analysts
           </p>
-          <div className="mt-3 flex items-center gap-3 text-xs">
+          <div className="mt-3">
+            <ConsensusBar buyCount={consensus.buyCount} holdCount={consensus.holdCount} sellCount={consensus.sellCount} />
+          </div>
+          <div className="mt-2 flex items-center gap-3 text-xs">
             <span className="text-positive">{consensus.buyCount} Buy</span>
             <span className="flex items-center gap-1 text-muted">
               <Minus size={10} /> {consensus.holdCount} Hold

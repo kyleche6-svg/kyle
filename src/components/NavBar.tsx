@@ -12,6 +12,7 @@ import {
 import { auth } from "@/lib/auth";
 import { Logo } from "@/components/Logo";
 import { MobileNavMenu } from "@/components/MobileNavMenu";
+import { NavLinks } from "@/components/NavLinks";
 
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: ChartLine, color: "var(--accent)" },
@@ -33,36 +34,22 @@ export async function NavBar() {
           <Logo size={20} />
           DollarWatch
         </Link>
-        <nav className="hidden items-center gap-5 text-sm text-muted md:flex">
-          {links.map((link) => {
-            const Icon = link.icon;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="flex items-center gap-1.5 transition-colors hover:text-foreground"
-              >
-                <Icon size={16} weight="regular" style={{ color: link.color }} />
-                {link.label}
-              </Link>
-            );
-          })}
-          {session?.user ? (
-            <Link
-              href="/account"
-              className="flex items-center gap-1.5 transition-colors hover:text-foreground"
-            >
-              <UserCircle size={16} weight="regular" />
-              Account
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="transition-colors hover:text-foreground"
-            >
-              Log in
-            </Link>
-          )}
+        <nav className="hidden items-center gap-5 self-stretch text-sm text-muted md:flex">
+          <NavLinks
+            links={[
+              ...links.map((link) => {
+                const Icon = link.icon;
+                return {
+                  href: link.href,
+                  label: link.label,
+                  icon: <Icon size={16} weight="regular" style={{ color: link.color }} />,
+                };
+              }),
+              session?.user
+                ? { href: "/account", label: "Account", icon: <UserCircle size={16} weight="regular" /> }
+                : { href: "/login", label: "Log in", icon: <UserCircle size={16} weight="regular" /> },
+            ]}
+          />
         </nav>
         <MobileNavMenu
           links={links.map((link) => {

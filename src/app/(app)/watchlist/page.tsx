@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { TrendUp, TrendDown, BellRinging } from "@phosphor-icons/react/dist/ssr";
+import { TrendUp, TrendDown, BellRinging, Binoculars } from "@phosphor-icons/react/dist/ssr";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
 import { prisma } from "@/lib/prisma";
 import { getQuote } from "@/lib/market-data";
@@ -48,7 +48,10 @@ export default async function WatchlistPage() {
       <Panel title="Your watchlist" className="mt-6">
         <AddWatchlistForm />
         {watchlistItems.length === 0 ? (
-          <p className="mt-4 text-sm text-muted">Nothing here yet — add a ticker above.</p>
+          <div className="mt-6 flex flex-col items-center gap-2 py-6 text-center">
+            <Binoculars size={28} weight="light" className="text-muted" />
+            <p className="text-sm text-muted">Nothing here yet — add a ticker above.</p>
+          </div>
         ) : (
           <div className="mt-4 overflow-x-auto">
             <table className="w-full text-left text-sm">

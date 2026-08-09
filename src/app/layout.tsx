@@ -16,9 +16,24 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://dollarwatch.watch"),
   title: "DollarWatch — Terminal-Grade Market Intelligence",
   description:
     "USD strength, insider trading disclosures, and institutional holdings — correlated in one desk, self-serve pricing.",
+  openGraph: {
+    title: "DollarWatch — Terminal-Grade Market Intelligence",
+    description:
+      "Real data, always attributed — not financial advice. Stocks, insider trading, and institutional holdings in one desk.",
+    url: "https://dollarwatch.watch",
+    siteName: "DollarWatch",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DollarWatch — Terminal-Grade Market Intelligence",
+    description:
+      "Real data, always attributed — not financial advice. Stocks, insider trading, and institutional holdings in one desk.",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

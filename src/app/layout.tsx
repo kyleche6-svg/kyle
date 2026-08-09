@@ -34,6 +34,9 @@ export const metadata: Metadata = {
     description:
       "Real data, always attributed — not financial advice. Stocks, insider trading, and institutional holdings in one desk.",
   },
+  verification: {
+    google: "gwrXGpN-jB4kF9OROyS5cUIfIMhrn-NDKEBR-AcWCM8",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

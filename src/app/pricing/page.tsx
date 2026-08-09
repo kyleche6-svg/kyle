@@ -12,12 +12,12 @@ const features = [
   "Full access to all future dashboard features",
 ];
 
-// $12.99 is the real, currently-charged monthly price — $16.24 is the
-// real Stripe base price with a genuine 20%-off launch coupon applied at
-// checkout (see createCheckoutSession), not a fabricated "was" price for
-// display purposes only.
+// $9.99 is the real, currently-charged monthly price — $16.24 is the
+// real Stripe base price with a genuine forever-discount launch coupon
+// applied at checkout (see createCheckoutSession), not a fabricated
+// "was" price for display purposes only.
 const monthlyOgPrice = 16.24;
-const monthlyPrice = 12.99;
+const monthlyPrice = 9.99;
 const monthlyDiscountPercent = Math.round((1 - monthlyPrice / monthlyOgPrice) * 100);
 const yearlyPrice = 99.99;
 const yearlySavingsPercent = Math.round(

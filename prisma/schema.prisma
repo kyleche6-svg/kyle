@@ -131,10 +131,12 @@ enum InsiderDirection {
   other
 }
 
-// Real SEC Form 4 filings, backfilled from SEC's daily index (every filing
-// for a given day, no cap) via scripts/scrape-insider-trades.mjs — unlike
-// the live "current filings" feed (hard-capped at 100 entries regardless of
-// requested count), this can hold a genuinely comprehensive day's worth.
+// Real SEC Form 4 filings, backfilled from SEC's daily index via
+// backfillDailyIndex() (src/lib/insider-trading.ts), run daily by
+// /api/cron/backfill-insider-trades — unlike the live "current filings"
+// feed (hard-capped at 100 entries regardless of requested count), this
+// pulls from a real per-day index, capped per run to fit a serverless
+// function's time budget rather than the feed's own cap.
 model InsiderTrade {
   id                 String           @id @default(cuid())
   ticker             String

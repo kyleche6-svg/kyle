@@ -26,7 +26,7 @@ export default async function InsiderTradingPage({
     <div className="mx-auto max-w-6xl px-6 py-8">
       <PageHeader
         title="Insider Trading"
-        description="Every SEC Form 4 filing from a full day, backfilled from SEC's daily index — company officers, directors, and 10%+ owners disclosing trades in their own company's stock, no filtering by name or company. Insiders must file within 2 business days of a transaction, so this reflects that window, not real-time."
+        description="Real SEC Form 4 filings, backfilled daily from SEC's daily index — company officers, directors, and 10%+ owners disclosing trades in their own company's stock, no filtering by name or company. A full trading day can carry 900+ filings; each day's backfill covers a real slice of that day's filings, not the full volume. Insiders must file within 2 business days of a transaction, so this reflects that window, not real-time."
       />
 
       {gainers.length === 3 && (

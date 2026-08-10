@@ -124,6 +124,83 @@ async function fetchFilingDetail(cik: string, accessionNoDashes: string, filedDa
   return trades;
 }
 
+// Pulls a full day's Form 4 filings from SEC's daily index — unlike the
+// "getcurrent" feed above (hard-capped at ~100 entries across ALL form
+// types), this is a real per-day index with no cap. Runs against
+// yesterday's date via the daily cron (see /api/cron/backfill-insider-
+// trades) since SEC's daily index for "today" isn't finalized until the
+// day closes. Idempotent: re-running the same date just no-ops on
+// filings already stored (externalId is a stable natural key).
+function quarterOf(monthIndex0: number): number {
+  return Math.floor(monthIndex0 / 3) + 1;
+}
+
+// Default cap sized to Vercel's 60s function budget (Hobby plan) — a
+// full trading day can carry 900+ Form 4 filings, and each one needs its
+// own SEC fetch, so processing every filing daily isn't possible inside
+// one serverless invocation. ~120 filings/day keeps this comfortably
+// under the time limit; the page copy is honest about this being a
+// recent slice, not literally every filing.
+export async function backfillDailyIndex(
+  date: Date,
+  maxFilings = 120,
+): Promise<{ filingsFound: number; filingsProcessed: number; tradesWritten: number }> {
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth(); // 0-indexed
+  const day = date.getUTCDate();
+  const quarter = quarterOf(month);
+  const dateStr = `${year}${String(month + 1).padStart(2, "0")}${String(day).padStart(2, "0")}`;
+  const filedDateIso = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+
+  const idx = await secText(
+    `https://www.sec.gov/Archives/edgar/daily-index/${year}/QTR${quarter}/form.${dateStr}.idx`,
+  );
+  if (!idx) return { filingsFound: 0, filingsProcessed: 0, tradesWritten: 0 };
+
+  // Fixed-width index file — one line per filing. Form 4 lines start with
+  // "4" then whitespace (never "4/A" etc., which starts "4/A").
+  const filings = [...idx.matchAll(/^4\s+.*?(\d{7,10})\s+\d{8}\s+edgar\/data\/\d+\/([\d-]+)\.txt\s*$/gm)].map(
+    (m) => ({ cik: m[1], accessionNoDashes: m[2].replace(/-/g, "") }),
+  );
+  const toProcess = filings.slice(0, maxFilings);
+
+  let tradesWritten = 0;
+  const BATCH = 8; // bounded concurrency — sequential would blow the function's time budget, full parallel risks a 429 from SEC
+  for (let i = 0; i < toProcess.length; i += BATCH) {
+    const batch = toProcess.slice(i, i + BATCH);
+    const batchResults = await Promise.all(
+      batch.map((f) => fetchFilingDetail(f.cik, f.accessionNoDashes, filedDateIso)),
+    );
+    const trades = batchResults.flat();
+    await Promise.all(
+      trades.map(async (trade) => {
+        await prisma.insiderTrade.upsert({
+          where: { externalId: trade.id },
+          create: {
+            externalId: trade.id,
+            ticker: trade.ticker,
+            issuerName: trade.issuerName,
+            ownerName: trade.ownerName,
+            relationship: trade.relationship,
+            transactionDate: new Date(trade.transactionDate),
+            transactionCode: trade.transactionCode,
+            direction: trade.direction,
+            shares: trade.shares,
+            pricePerShare: trade.pricePerShare,
+            sharesOwnedAfter: trade.sharesOwnedAfter,
+            filedDate: new Date(trade.filedDate),
+            filingUrl: trade.filingUrl,
+          },
+          update: {},
+        });
+        tradesWritten++;
+      }),
+    );
+  }
+
+  return { filingsFound: filings.length, filingsProcessed: toProcess.length, tradesWritten };
+}
+
 export async function getRecentInsiderTrades(limit = 100): Promise<InsiderTrade[]> {
   const feed = await secText(
     "https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=4&company=&dateb=&owner=include&count=100&output=atom",

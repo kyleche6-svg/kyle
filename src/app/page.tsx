@@ -59,7 +59,7 @@ const pillars = [
 export default async function Home() {
   const stocks = await getStockList();
   const orbitStocks = stocks
-    .slice(0, 8)
+    .slice(0, 16)
     .map((s) => ({ ticker: s.ticker, changePercent: s.quote.changePercent }));
   const tapeStocks = stocks
     .slice(0, 18)

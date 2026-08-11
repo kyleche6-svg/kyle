@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { PlaceholderBanner } from "@/components/PlaceholderBanner";
 import { PageHeader } from "@/components/PageHeader";
 
 const faqs = [
@@ -32,7 +31,6 @@ const faqs = [
 export default function SupportPage() {
   return (
     <div className="mx-auto max-w-2xl px-6 py-16">
-      <PlaceholderBanner />
       <PageHeader
         title="Customer Support"
         description="Answers to common questions. If yours isn't covered, reach out and we'll help."
@@ -50,7 +48,9 @@ export default function SupportPage() {
       <div className="mt-10 rounded-md border border-panel-border bg-panel p-5">
         <h2 className="text-sm font-medium">Still need help?</h2>
         <p className="mt-1.5 text-sm text-muted">
-          [PLACEHOLDER — replace with a real support inbox] support@yourdomain.com
+          <a href="mailto:support@dollarwatch.watch" className="text-accent hover:underline">
+            support@dollarwatch.watch
+          </a>
         </p>
         <p className="mt-3 text-xs text-muted">
           Billing-specific questions: see the{" "}

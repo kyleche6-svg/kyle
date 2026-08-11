@@ -26,7 +26,7 @@ type OrbitStock = { ticker: string; changePercent: number };
 // backwards text stays structurally impossible while the motion reads
 // as a genuine rotating globe.
 export function HeroOrbit({ stocks }: { stocks: OrbitStock[] }) {
-  const sphereRadius = 175;
+  const sphereRadius = 205;
   const squashY = 0.92; // slight vertical squash so it reads as a sphere, not a flat disc, in the box's aspect ratio
   const tiltRef = useRef<HTMLDivElement>(null);
   const chipRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -86,7 +86,7 @@ export function HeroOrbit({ stocks }: { stocks: OrbitStock[] }) {
 
   return (
     <div
-      className="relative mx-auto h-[380px] w-[380px] sm:h-[440px] sm:w-[440px]"
+      className="relative h-[420px] w-[420px] sm:h-[500px] sm:w-[500px]"
       style={{ perspective: "1200px" }}
       onMouseMove={(e) => {
         const el = tiltRef.current;
@@ -108,16 +108,16 @@ export function HeroOrbit({ stocks }: { stocks: OrbitStock[] }) {
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
           style={{
-            width: 132,
-            height: 132,
+            width: 150,
+            height: 150,
             background:
               "radial-gradient(circle, color-mix(in srgb, var(--accent) 20%, transparent) 0%, transparent 70%)",
             filter: "blur(4px)",
           }}
           aria-hidden="true"
         />
-        <div className="absolute top-1/2 left-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-panel-border bg-panel shadow-[0_0_40px_-4px_color-mix(in_srgb,var(--accent)_50%,transparent)]">
-          <Logo size={28} />
+        <div className="absolute top-1/2 left-1/2 flex h-[72px] w-[72px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-panel-border bg-panel shadow-[0_0_40px_-4px_color-mix(in_srgb,var(--accent)_50%,transparent)]">
+          <Logo size={32} />
         </div>
 
         <div className="absolute top-1/2 left-1/2">
@@ -132,11 +132,11 @@ export function HeroOrbit({ stocks }: { stocks: OrbitStock[] }) {
               <Link
                 href={`/stocks/${stock.ticker}`}
                 prefetch={false}
-                className="flex w-[72px] flex-col items-center gap-0.5 rounded-md border border-panel-border bg-panel/90 px-2 py-1.5 text-center shadow-[0_6px_20px_-6px_rgba(0,0,0,0.7)] backdrop-blur-sm transition-transform hover:scale-110"
+                className="flex w-[92px] flex-col items-center gap-0.5 rounded-md border border-panel-border bg-panel/90 px-2.5 py-2 text-center shadow-[0_6px_20px_-6px_rgba(0,0,0,0.7)] backdrop-blur-sm transition-transform hover:scale-110"
               >
-                <p className="font-mono text-xs font-semibold">{stock.ticker}</p>
+                <p className="font-mono text-sm font-semibold">{stock.ticker}</p>
                 <p
-                  className={`font-mono text-[10px] tabular-nums ${stock.changePercent >= 0 ? "text-positive" : "text-negative"}`}
+                  className={`font-mono text-xs tabular-nums ${stock.changePercent >= 0 ? "text-positive" : "text-negative"}`}
                 >
                   {stock.changePercent >= 0 ? "+" : ""}
                   {stock.changePercent.toFixed(2)}%

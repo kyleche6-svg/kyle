@@ -84,7 +84,7 @@ export default async function Home() {
           }}
           aria-hidden="true"
         />
-        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 pt-20 pb-10 sm:pt-28 sm:pb-16 lg:grid-cols-[1.1fr_0.9fr] lg:gap-4">
+        <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 pt-20 pb-10 sm:pt-28 sm:pb-16 lg:grid-cols-[1fr_1.05fr] lg:gap-4">
           <div className="max-w-3xl">
             <div className="animate-rise-in mb-8 inline-flex items-center gap-2 border border-panel-border bg-panel/60 px-3 py-1 text-xs font-medium tracking-[0.15em] text-muted uppercase backdrop-blur-sm">
               Real data, always attributed — not financial advice
@@ -125,7 +125,7 @@ export default async function Home() {
               </span>
             </div>
           </div>
-          <div className="animate-rise-in hidden lg:block" style={{ animationDelay: "200ms" }}>
+          <div className="animate-rise-in hidden justify-end lg:flex" style={{ animationDelay: "200ms" }}>
             <HeroOrbit stocks={orbitStocks} />
           </div>
         </div>

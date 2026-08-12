@@ -10,6 +10,20 @@ import { ChangeBar } from "@/components/ChangeBar";
 const WINDOW_LABELS = ["1 month", "3 months", "6 months", "1 year"] as const;
 type WindowLabel = (typeof WINDOW_LABELS)[number];
 
+const CONSENSUS_LABELS: Record<string, string> = {
+  strong_buy: "Strong Buy",
+  buy: "Buy",
+  hold: "Hold",
+  sell: "Sell",
+  strong_sell: "Strong Sell",
+};
+
+function consensusColor(consensus: string) {
+  if (consensus === "strong_buy" || consensus === "buy") return "text-positive";
+  if (consensus === "sell" || consensus === "strong_sell") return "text-negative";
+  return "text-muted";
+}
+
 // Fans out to ~51 tickers on a cache miss (see getReturnRankings) — give
 // it real headroom above the platform default so a cold cache doesn't
 // risk a function timeout.
@@ -17,6 +31,10 @@ export const maxDuration = 30;
 
 function formatPct(value: number | null, digits = 1) {
   return value === null ? "—" : `${value >= 0 ? "+" : ""}${(value * 100).toFixed(digits)}%`;
+}
+
+function formatRatio(value: number | null) {
+  return value === null ? "—" : value.toFixed(1);
 }
 
 export default async function ReturnRankingsPage({
@@ -38,6 +56,8 @@ export default async function ReturnRankingsPage({
       ticker: r.ticker,
       companyName: r.companyName,
       stats: r.windows.find((w) => w.label === activeWindow) ?? null,
+      consensus: r.consensus,
+      keyStats: r.stats,
     }))
     .filter((r) => r.stats && r.stats.positiveFrequency !== null)
     .sort((a, b) => (b.stats!.positiveFrequency ?? 0) - (a.stats!.positiveFrequency ?? 0));
@@ -77,7 +97,10 @@ export default async function ReturnRankingsPage({
                 <th className="pb-2 pr-4 font-normal">Positive periods ({activeWindow})</th>
                 <th className="pb-2 pr-4 font-normal">Mean return</th>
                 <th className="pb-2 pr-4 font-normal">Std. deviation</th>
-                <th className="pb-2 font-normal">Sample size</th>
+                <th className="pb-2 pr-4 font-normal">Sample size</th>
+                <th className="pb-2 pr-4 font-normal">Analyst consensus</th>
+                <th className="pb-2 pr-4 font-normal">P/E (TTM)</th>
+                <th className="pb-2 font-normal">Profit margin</th>
               </tr>
             </thead>
             <tbody>
@@ -109,7 +132,18 @@ export default async function ReturnRankingsPage({
                     <td className="py-2.5 pr-4 font-mono text-xs tabular-nums text-muted">
                       {stats.stdDev === null ? "—" : `${(stats.stdDev * 100).toFixed(1)}%`}
                     </td>
-                    <td className="py-2.5 font-mono text-xs tabular-nums text-muted">{stats.sampleCount}</td>
+                    <td className="py-2.5 pr-4 font-mono text-xs tabular-nums text-muted">{stats.sampleCount}</td>
+                    <td className="py-2.5 pr-4">
+                      <span className={`font-medium ${consensusColor(row.consensus.consensus)}`}>
+                        {CONSENSUS_LABELS[row.consensus.consensus]}
+                      </span>
+                    </td>
+                    <td className="py-2.5 pr-4 font-mono text-xs tabular-nums">
+                      {formatRatio(row.keyStats.trailingPE)}
+                    </td>
+                    <td className="py-2.5 font-mono text-xs tabular-nums">
+                      {row.keyStats.profitMargin === null ? "—" : formatPct(row.keyStats.profitMargin, 0)}
+                    </td>
                   </tr>
                 );
               })}

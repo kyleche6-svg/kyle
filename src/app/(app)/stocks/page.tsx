@@ -9,6 +9,7 @@ import {
   CalendarCheck,
   Coins,
   SquaresFour,
+  ChartBar,
 } from "@phosphor-icons/react/dist/ssr";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
 import { getStockList, TRENDING_TICKERS } from "@/lib/stocks";
@@ -105,6 +106,7 @@ export default async function StocksPage({
           { href: "/earnings-calendar", label: "Earnings calendar", icon: CalendarCheck, color: "var(--accent-warm)" },
           { href: "/dividend-calendar", label: "Dividend calendar", icon: Coins, color: "var(--accent-2)" },
           { href: "/heatmap", label: "Sector heatmap", icon: SquaresFour, color: "var(--accent)" },
+          { href: "/return-rankings", label: "Return rankings", icon: ChartBar, color: "var(--accent-warm)" },
         ].map((tool) => {
           const Icon = tool.icon;
           return (

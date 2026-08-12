@@ -1,8 +1,15 @@
+import { prisma } from "@/lib/prisma";
+
 export type Quote = {
   symbol: string;
   label: string;
   price: number;
   changePercent: number;
+  // False only when this came straight from Twelve Data this request.
+  // Never presented as live when it isn't — see TickerTape, StatNumber
+  // usage, and the stock detail page for where this actually changes
+  // what's shown to a visitor.
+  isEstimate: boolean;
 };
 
 export type SeriesPoint = { date: string; value: number };
@@ -40,11 +47,11 @@ function daySeed(symbol: string) {
   return `${symbol}:${today}`;
 }
 
-function mockQuote(symbol: string, label: string, basePrice: number): Quote {
+function mockQuote(symbol: string, label: string, anchorPrice: number): Quote {
   const rand = seededRandom(daySeed(symbol));
   const changePercent = (rand - 0.5) * 2; // -1% to +1%
-  const price = basePrice * (1 + changePercent / 100);
-  return { symbol, label, price, changePercent };
+  const price = anchorPrice * (1 + changePercent / 100);
+  return { symbol, label, price, changePercent, isEstimate: true };
 }
 
 function mockSeries(basePrice: number, seedKey: string, points = 30): SeriesPoint[] {
@@ -80,10 +87,27 @@ async function twelveDataQuote(
       label,
       price: parseFloat(data.close),
       changePercent: parseFloat(data.percent_change ?? "0"),
+      isEstimate: false,
     };
   } catch {
     return null;
   }
+}
+
+// Last real price seen for a symbol, persisted whenever a live fetch
+// succeeds — the anchor used for the fallback estimate when the live
+// feed is down, instead of a value hardcoded at project setup (which
+// only ever drifts further from reality the longer the project runs).
+// Fire-and-forget: never blocks or fails the quote a visitor is waiting
+// on for a write that's purely for next time.
+function persistLastKnownPrice(symbol: string, price: number, changePercent: number) {
+  prisma.lastKnownPrice
+    .upsert({
+      where: { symbol },
+      create: { symbol, price, changePercent },
+      update: { price, changePercent },
+    })
+    .catch((err: unknown) => console.error("failed to persist last known price", symbol, err));
 }
 
 export async function getQuote(
@@ -92,7 +116,13 @@ export async function getQuote(
   basePrice: number,
 ): Promise<Quote> {
   const real = await twelveDataQuote(symbol, label);
-  return real ?? mockQuote(symbol, label, basePrice);
+  if (real) {
+    persistLastKnownPrice(symbol, real.price, real.changePercent);
+    return real;
+  }
+
+  const lastKnown = await prisma.lastKnownPrice.findUnique({ where: { symbol } }).catch(() => null);
+  return mockQuote(symbol, label, lastKnown?.price ?? basePrice);
 }
 
 async function twelveDataSeries(

@@ -209,6 +209,11 @@ export default async function StocksPage({
                       <td className="py-2.5 pr-4 text-muted">{stock.companyName}</td>
                       <td className="py-2.5 pr-4 font-mono tabular-nums">
                         ${stock.quote.price.toFixed(2)}
+                        {stock.quote.isEstimate && (
+                          <span className="ml-1 text-[10px] text-muted" title="Live feed unavailable — estimated">
+                            est.
+                          </span>
+                        )}
                       </td>
                       <td className="py-2.5 pr-4">
                         <div className="flex items-center gap-2">

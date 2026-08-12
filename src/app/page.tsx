@@ -64,10 +64,15 @@ export default async function Home() {
   const tapeStocks = stocks
     .slice(0, 18)
     .map((s) => ({ ticker: s.ticker, changePercent: s.quote.changePercent, price: s.quote.price }));
+  // Whole ribbon is marked delayed the moment ANY of its quotes aren't
+  // live — a partial "LIVE" claim (some real, some estimated, no way to
+  // tell which) is exactly as misleading as showing it on 100% fallback
+  // data, so this doesn't average or sample, it's a strict all-or-nothing.
+  const tapeIsLive = stocks.slice(0, 18).every((s) => !s.quote.isEstimate);
 
   return (
     <div>
-      <TickerTape stocks={tapeStocks} />
+      <TickerTape stocks={tapeStocks} isLive={tapeIsLive} />
       <div className="relative overflow-hidden border-b border-panel-border">
         <div
           className="pointer-events-none absolute top-0 right-0 h-[520px] w-[520px] opacity-25 blur-[100px]"

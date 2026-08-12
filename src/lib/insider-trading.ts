@@ -201,6 +201,52 @@ export async function backfillDailyIndex(
   return { filingsFound: filings.length, filingsProcessed: toProcess.length, tradesWritten };
 }
 
+function mostRecentBusinessDay(from: Date): Date {
+  const d = new Date(from);
+  d.setUTCDate(d.getUTCDate() - 1);
+  while (d.getUTCDay() === 0 || d.getUTCDay() === 6) {
+    d.setUTCDate(d.getUTCDate() - 1);
+  }
+  return d;
+}
+
+// Belt-and-suspenders for the daily cron: confirmed live that the
+// scheduled Vercel Cron run occasionally reports success but doesn't
+// actually write new rows (root cause not pinned down — possibly a
+// Hobby-plan cron reliability issue), leaving the table silently stuck
+// on an old date with no visible symptom for a visitor. Rather than rely
+// on catching that manually, the insider trading page checks its own
+// data's freshness on every load and, if it's gone stale, kicks off a
+// real backfill in the background via Next's `after()` — the current
+// request still returns whatever's in the DB immediately, so a visitor
+// never waits on this; the *next* visitor gets the refreshed data.
+// `inFlight` is a same-instance debounce only (not distributed across
+// serverless instances), but the backfill itself is idempotent via
+// externalId upserts, so worst case under concurrent cold starts is a
+// few redundant SEC fetches, never duplicate rows.
+let selfHealInFlight = false;
+
+export async function selfHealIfStale(): Promise<void> {
+  if (selfHealInFlight) return;
+
+  const latest = await prisma.insiderTrade.findFirst({ orderBy: { filedDate: "desc" } });
+  const staleAfter = mostRecentBusinessDay(new Date());
+  staleAfter.setUTCHours(0, 0, 0, 0);
+
+  if (latest && latest.filedDate.getTime() >= staleAfter.getTime()) return;
+
+  selfHealInFlight = true;
+  try {
+    const target = mostRecentBusinessDay(new Date());
+    const result = await backfillDailyIndex(target);
+    console.log(JSON.stringify({ event: "insider_trading_self_heal", target: target.toISOString().slice(0, 10), ...result }));
+  } catch (err) {
+    console.error("insider trading self-heal failed", err);
+  } finally {
+    selfHealInFlight = false;
+  }
+}
+
 export async function getRecentInsiderTrades(limit = 100): Promise<InsiderTrade[]> {
   const feed = await secText(
     "https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=4&company=&dateb=&owner=include&count=100&output=atom",

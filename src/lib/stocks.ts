@@ -84,7 +84,7 @@ export const TRENDING_TICKERS = [
   { ticker: "UBER", companyName: "Uber Technologies", basePrice: 78.5 },
   { ticker: "PLTR", companyName: "Palantir Technologies", basePrice: 158.4 },
   { ticker: "ORCL", companyName: "Oracle Corp.", basePrice: 178.9 },
-  { ticker: "INTC", companyName: "Intel Corp.", basePrice: 34.2 },
+  { ticker: "INTC", companyName: "Intel Corp.", basePrice: 98.5 },
   { ticker: "QCOM", companyName: "Qualcomm Inc.", basePrice: 168.7 },
   { ticker: "TXN", companyName: "Texas Instruments", basePrice: 198.4 },
   { ticker: "IBM", companyName: "IBM Corp.", basePrice: 231.6 },

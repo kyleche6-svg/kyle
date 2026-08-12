@@ -21,6 +21,22 @@ model DailyBriefCache {
   generatedAt DateTime
 }
 
+// The last real price actually seen from Twelve Data for a symbol.
+// When the live feed is unavailable (rate limit, outage), this — not a
+// value hardcoded at project setup — is the anchor for the fallback
+// estimate, so a fallback is never more than one real fetch behind
+// reality. Confirmed live: a hardcoded basePrice (Intel at $34.20) had
+// gone badly stale (real price ~$98) by the time the free API quota
+// next ran out, showing a wrong price with no indication it wasn't
+// real — this fixes both the staleness and (paired with Quote.isEstimate
+// in the app code) the missing disclosure.
+model LastKnownPrice {
+  symbol        String   @id
+  price         Float
+  changePercent Float
+  updatedAt     DateTime @updatedAt
+}
+
 model User {
   id                      String                   @id @default(cuid())
   email                   String                   @unique

@@ -22,16 +22,18 @@ function TapeContent({ stocks }: { stocks: TapeStock[] }) {
   );
 }
 
-export function TickerTape({ stocks }: { stocks: TapeStock[] }) {
+export function TickerTape({ stocks, isLive }: { stocks: TapeStock[]; isLive: boolean }) {
   return (
     <div className="group relative flex overflow-hidden border-y border-panel-border bg-panel/60">
       <div className="flex shrink-0 items-center border-r border-panel-border bg-background/80 px-4 py-2.5">
         <span className="relative flex h-1.5 w-1.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-positive opacity-75" />
-          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-positive" />
+          {isLive && (
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-positive opacity-75" />
+          )}
+          <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${isLive ? "bg-positive" : "bg-muted"}`} />
         </span>
         <span className="ml-2 shrink-0 font-mono text-[10px] font-semibold tracking-[0.15em] text-muted uppercase">
-          Live
+          {isLive ? "Live" : "Delayed"}
         </span>
       </div>
       <div className="relative flex-1 overflow-hidden">

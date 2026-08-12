@@ -149,6 +149,9 @@ export default async function StockDetailPage({
           <p className="font-mono text-3xl font-semibold tabular-nums">
             ${quote.price.toFixed(2)}
           </p>
+          {quote.isEstimate && (
+            <p className="text-[11px] text-muted">Estimated — live feed unavailable</p>
+          )}
           <p
             className={`flex items-center justify-end gap-1 font-mono text-sm tabular-nums ${
               isPositive ? "text-positive" : "text-negative"

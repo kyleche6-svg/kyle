@@ -1,6 +1,7 @@
+import { after } from "next/server";
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
 import { requireActiveSubscription } from "@/lib/subscription-guard";
-import { getInsiderTradesPage, getTopInsiderGainers } from "@/lib/insider-trading";
+import { getInsiderTradesPage, getTopInsiderGainers, selfHealIfStale } from "@/lib/insider-trading";
 import { Panel } from "@/components/Panel";
 import { Disclaimer } from "@/components/Disclaimer";
 import { InsiderTradeTable } from "@/components/InsiderTradeTable";
@@ -13,6 +14,12 @@ export default async function InsiderTradingPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   await requireActiveSubscription();
+
+  // Self-heal, not on the request path — a visitor gets whatever's in
+  // the DB right now immediately; if it's gone stale, a real refresh
+  // starts in the background after this response is sent (see
+  // selfHealIfStale for why this exists, not just the daily cron).
+  after(() => selfHealIfStale());
 
   const { q } = await searchParams;
   const search = q?.trim() || undefined;

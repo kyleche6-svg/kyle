@@ -94,6 +94,41 @@ async function twelveDataQuote(
   }
 }
 
+// Second real source, tried when Twelve Data is unavailable — Finnhub's
+// /quote endpoint (already have the key, used for news) works on its
+// free tier for US equities and has a far more forgiving limit (60/min,
+// no punishing hard daily cap like Twelve Data's 800/day). Confirmed
+// live against a real symbol before wiring this in. US-equities only:
+// forex/commodity symbols here look like "EUR/USD" (Finnhub's free
+// quote endpoint doesn't cover those), so skip it for anything with a
+// slash rather than send a request that can't succeed.
+async function finnhubQuote(symbol: string, label: string): Promise<Quote | null> {
+  const apiKey = process.env.FINNHUB_API_KEY;
+  if (!apiKey || symbol.includes("/")) return null;
+
+  try {
+    const res = await fetch(
+      `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${apiKey}`,
+      { next: { revalidate: CACHE_SECONDS } },
+    );
+    const data = await res.json();
+    // Finnhub returns all-zero fields for an unrecognized symbol rather
+    // than an HTTP error, so a zero current price means "no data," not
+    // "the stock is worth zero."
+    if (!data || typeof data.c !== "number" || data.c === 0) return null;
+
+    return {
+      symbol,
+      label,
+      price: data.c,
+      changePercent: typeof data.dp === "number" ? data.dp : 0,
+      isEstimate: false,
+    };
+  } catch {
+    return null;
+  }
+}
+
 // Last real price seen for a symbol, persisted whenever a live fetch
 // succeeds — the anchor used for the fallback estimate when the live
 // feed is down, instead of a value hardcoded at project setup (which
@@ -115,7 +150,7 @@ export async function getQuote(
   label: string,
   basePrice: number,
 ): Promise<Quote> {
-  const real = await twelveDataQuote(symbol, label);
+  const real = (await twelveDataQuote(symbol, label)) ?? (await finnhubQuote(symbol, label));
   if (real) {
     persistLastKnownPrice(symbol, real.price, real.changePercent);
     return real;
